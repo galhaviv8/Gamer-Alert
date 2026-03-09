@@ -1,0 +1,83 @@
+name: Fetch Alert History
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour
+  workflow_dispatch:       # Manual trigger
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch alert history from oref
+        run: |
+          node -e "
+          const https = require('https');
+          const fs    = require('fs');
+
+          const now  = new Date(new Date().toLocaleString('en-US', {timeZone: 'Asia/Jerusalem'}));
+          const pad  = n => String(n).padStart(2,'0');
+          const dd   = pad(now.getDate());
+          const mm   = pad(now.getMonth()+1);
+          const yyyy = now.getFullYear();
+
+          // Fetch last 14 days
+          const allAlerts = [];
+          let pending = 14;
+
+          for (let i = 0; i < 14; i++) {
+            const d = new Date(now);
+            d.setDate(d.getDate() - i);
+            const ddd  = pad(d.getDate());
+            const dmm  = pad(d.getMonth()+1);
+            const dyyyy= d.getFullYear();
+            const dateStr = ddd+'.'+dmm+'.'+dyyyy;
+            const isoStr  = dyyyy+'-'+dmm+'-'+ddd;
+
+            const url = 'https://alerts-history.oref.org.il/Shared/Ajax/GetAlarmsHistory.aspx?lang=0&fromDate='+dateStr+'&toDate='+dateStr+'&mode=0';
+
+            const req = https.get(url, {
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Referer': 'https://www.oref.org.il/',
+                'User-Agent': 'Mozilla/5.0'
+              }
+            }, res => {
+              let body = '';
+              res.on('data', c => body += c);
+              res.on('end', () => {
+                try {
+                  if (body && !body.trim().startsWith('<')) {
+                    const data = JSON.parse(body);
+                    if (Array.isArray(data)) {
+                      data.forEach(a => allAlerts.push({
+                        alertDate: a.alertDate || isoStr+'T00:00:00',
+                        title: a.title || 'ירי רקטות',
+                        data: Array.isArray(a.data) ? a.data : []
+                      }));
+                    }
+                  }
+                } catch(e) {}
+                if (--pending === 0) done();
+              });
+            });
+            req.on('error', () => { if (--pending === 0) done(); });
+          }
+
+          function done() {
+            allAlerts.sort((a,b) => b.alertDate.localeCompare(a.alertDate));
+            fs.writeFileSync('alerts-history.json', JSON.stringify(allAlerts));
+            console.log('Saved', allAlerts.length, 'alerts');
+          }
+          "
+
+      - name: Commit and push
+        run: |
+          git config user.name  "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add alerts-history.json
+          git diff --staged --quiet || git commit -m "Update alert history $(date -u '+%Y-%m-%d %H:%M')"
+          git push

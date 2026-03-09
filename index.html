@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GamerAlert — מתי בטוח לשחק?</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Heebo:wght@400;500;600;700;900&family=Exo+2:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#05080d;--s1:#090e16;--s2:#0d1520;--s3:#111c2a;
+  --border:#182840;--border2:#1f3550;
+  --green:#00e676;--green2:#00c853;--teal:#00bcd4;
+  --yellow:#ffd600;--amber:#ff8f00;--orange:#ff6d00;
+  --red:#f44336;--blue:#29b6f6;--blue2:#0288d1;
+  --dim2:#2a4e68;--text:#bdd8e8;--text2:#6a9abb;--text3:#3a6680;
+  --mono:'Share Tech Mono',monospace;--disp:'Exo 2',sans-serif;--body:'Heebo',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden;}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 26px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(41,182,246,.06) 0%,transparent 100%);position:sticky;top:0;z-index:200;backdrop-filter:blur(14px);}
+.logo{font-family:var(--disp);font-size:24px;font-weight:800;letter-spacing:3px;color:var(--blue);text-shadow:0 0 18px rgba(41,182,246,.35);}
+.logo em{color:var(--green);font-style:normal;}
+.topbar-right{display:flex;align-items:center;gap:18px;}
+.clock-wrap{text-align:center;}
+.clock-label{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:2px;margin-bottom:2px;}
+.clock{font-family:var(--mono);font-size:22px;color:var(--blue);letter-spacing:3px;padding:5px 12px;border:1px solid rgba(41,182,246,.2);border-radius:6px;}
+.live-badge{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid rgba(0,230,118,.2);background:rgba(0,230,118,.04);color:var(--text2);}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.6s infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+
+/* LIVE ALERT BANNER */
+.alert-banner{display:none;position:sticky;top:57px;z-index:190;background:rgba(244,67,54,.18);border-bottom:2px solid var(--red);padding:12px 28px;animation:flashbg 1s infinite alternate;}
+@keyframes flashbg{from{background:rgba(244,67,54,.18)}to{background:rgba(244,67,54,.35)}}
+.alert-banner.show{display:flex;}
+.ab-icon{font-size:28px;margin-left:12px;}
+.ab-text{font-family:var(--disp);font-size:17px;font-weight:700;color:#fff;}
+.ab-sub{font-size:13px;color:rgba(255,255,255,.7);margin-top:2px;}
+.ab-time{font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.5);margin-right:auto;}
+
+/* LAYOUT */
+.wrap{max-width:1340px;margin:0 auto;padding:16px 20px 44px;display:flex;flex-direction:column;gap:14px;}
+
+/* CARDS */
+.card{background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;}
+.card-lbl{font-family:var(--disp);font-size:16px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.card-lbl::before{content:'';width:4px;height:18px;background:var(--blue);border-radius:2px;flex-shrink:0;}
+
+/* SEARCH */
+.search-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px;}
+.search-label{font-family:var(--disp);font-size:16px;font-weight:700;color:var(--blue);white-space:nowrap;}
+.search-input-wrap{flex:1;position:relative;min-width:200px;}
+.search-input{width:100%;padding:10px 16px 10px 40px;background:var(--s3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--body);font-size:16px;outline:none;transition:border-color .2s;}
+.search-input:focus{border-color:var(--blue);}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px;pointer-events:none;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{padding:7px 16px;border-radius:18px;cursor:pointer;font-family:var(--body);font-size:14px;border:1px solid var(--border2);background:var(--s3);color:var(--text2);transition:all .18s;}
+.chip:hover,.chip.active{border-color:var(--blue);color:var(--blue);background:rgba(41,182,246,.08);}
+.chip.north.active{border-color:var(--teal);color:var(--teal);background:rgba(0,188,212,.07);}
+.chip.center.active{border-color:var(--green);color:var(--green);background:rgba(0,230,118,.07);}
+.chip.jerusalem.active{border-color:var(--yellow);color:var(--yellow);background:rgba(255,214,0,.07);}
+.chip.south.active{border-color:var(--amber);color:var(--amber);background:rgba(255,143,0,.07);}
+
+/* STATUS */
+.status-card{border-radius:14px;border:1px solid var(--border2);background:var(--s2);padding:22px 28px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;position:relative;overflow:hidden;transition:border-color .4s;}
+.status-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;transition:background .4s;}
+.sc-go{border-color:rgba(0,230,118,.3);}
+.sc-go::before{background:linear-gradient(90deg,transparent,var(--green),transparent);}
+.sc-warn{border-color:rgba(255,214,0,.25);}
+.sc-warn::before{background:linear-gradient(90deg,transparent,var(--yellow),transparent);}
+.sc-risk{border-color:rgba(255,109,0,.25);}
+.sc-risk::before{background:linear-gradient(90deg,transparent,var(--orange),transparent);}
+.sc-danger{border-color:rgba(244,67,54,.3);}
+.sc-danger::before{background:linear-gradient(90deg,transparent,var(--red),transparent);}
+.s-emoji{font-size:56px;line-height:1;}
+.s-tag{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--text2);margin-bottom:5px;}
+.s-hl{font-family:var(--disp);font-size:36px;font-weight:800;line-height:1;}
+.sc-go .s-hl{color:var(--green);}
+.sc-warn .s-hl{color:var(--yellow);}
+.sc-risk .s-hl{color:var(--orange);}
+.sc-danger .s-hl{color:var(--red);}
+.s-detail{font-size:15px;color:var(--text2);margin-top:7px;line-height:1.6;}
+.s-detail strong{color:var(--text);}
+.next-box{text-align:center;min-width:145px;padding:14px 18px;border:1px solid var(--border2);border-radius:10px;background:rgba(0,0,0,.25);}
+.next-label{font-family:var(--mono);font-size:11px;color:var(--dim2);letter-spacing:2px;margin-bottom:6px;}
+.next-time{font-family:var(--mono);font-size:26px;color:var(--green);letter-spacing:2px;}
+.next-sub{font-size:13px;color:var(--text2);margin-top:3px;}
+
+/* GAME SELECTOR */
+.game-grid{display:flex;flex-wrap:wrap;gap:9px;margin-top:4px;}
+.game-card{display:flex;align-items:center;gap:9px;padding:10px 14px;border-radius:10px;border:1px solid var(--border2);background:var(--s3);cursor:pointer;transition:all .18s;min-width:190px;}
+.game-card:hover{background:rgba(255,255,255,.04);}
+.game-card.selected{background:rgba(41,182,246,.09);border-color:var(--blue);}
+.game-icon{font-size:22px;width:30px;text-align:center;flex-shrink:0;}
+.game-name{font-family:var(--disp);font-size:14px;font-weight:700;color:var(--text);}
+.game-mode{font-size:12px;color:var(--text2);margin-top:1px;}
+.game-dur{font-family:var(--mono);font-size:13px;padding:3px 9px;border-radius:10px;background:rgba(41,182,246,.09);border:1px solid rgba(41,182,246,.18);color:var(--blue);white-space:nowrap;}
+
+/* HEATMAP */
+.conflict-tabs{display:flex;width:fit-content;border:1px solid var(--border2);border-radius:8px;overflow:hidden;margin-bottom:14px;}
+.ctab{padding:7px 16px;background:transparent;border:none;cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--text2);transition:all .2s;}
+.ctab.active{background:rgba(41,182,246,.12);color:var(--blue);}
+.heat-grid{display:grid;grid-template-columns:repeat(24,1fr);gap:4px;margin-bottom:5px;}
+.hcell{aspect-ratio:1/1.5;border-radius:4px;cursor:pointer;transition:transform .1s;}
+.hcell:hover{transform:scaleY(1.7) translateY(-3px);filter:brightness(1.3);z-index:5;position:relative;}
+.hcell.now{outline:2px solid #fff;outline-offset:2px;}
+.heat-labels{display:grid;grid-template-columns:repeat(24,1fr);gap:4px;}
+.hlbl{font-family:var(--mono);font-size:11px;text-align:center;color:var(--text3);}
+/* Risk palette — distinct, readable */
+.r0{background:#00e676;}.r1{background:#00b849;}
+.r2{background:#2d7a45;}.r3{background:#a67c00;}
+.r4{background:#e6a000;}.r5{background:#d94f00;}
+.r6{background:#b01010;}.r7{background:#6b0000;}
+.mhc.r0{background:#00e676;}.mhc.r1{background:#00b849;}
+.mhc.r2{background:#2d7a45;}.mhc.r3{background:#a67c00;}
+.mhc.r4{background:#e6a000;}.mhc.r5{background:#d94f00;}
+.mhc.r6{background:#b01010;}.mhc.r7{background:#6b0000;}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+.leg{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);}
+.leg-sq{width:13px;height:13px;border-radius:3px;flex-shrink:0;}
+
+/* SAFE WINDOWS */
+.sw-list{display:flex;flex-direction:column;gap:7px;margin-top:4px;}
+.swi{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border-radius:8px;border:1px solid rgba(0,230,118,.12);background:rgba(0,230,118,.03);cursor:pointer;transition:all .15s;}
+.swi:hover{background:rgba(0,230,118,.07);border-color:rgba(0,230,118,.3);}
+.swi.now-win{border-color:rgba(0,230,118,.45);background:rgba(0,230,118,.08);}
+.swi.past{opacity:.38;}
+.swi-time{font-family:var(--mono);font-size:18px;color:var(--green);font-weight:600;}
+.swi-dur{font-size:13px;color:var(--text2);margin-top:2px;}
+.swi-tag{font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:9px;}
+.tag-now{background:rgba(0,230,118,.15);color:var(--green);}
+.tag-soon{background:rgba(255,214,0,.1);color:var(--yellow);}
+.tag-past{background:rgba(255,255,255,.04);color:var(--text3);}
+
+/* REGION SECTIONS */
+.region-section{border-radius:12px;border:1px solid var(--border);overflow:hidden;transition:border-color .3s;}
+.region-section.north{--rc:var(--teal);}
+.region-section.center{--rc:var(--green);}
+.region-section.jerusalem{--rc:var(--yellow);}
+.region-section.south{--rc:var(--amber);}
+.region-section.active-region,.region-section.open{border-color:var(--rc);}
+.region-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--s2);cursor:pointer;transition:background .2s;}
+.region-header:hover{background:var(--s3);}
+.rh-left{display:flex;align-items:center;gap:11px;}
+.rh-bar{width:4px;height:30px;border-radius:2px;background:var(--rc);flex-shrink:0;}
+.rh-name{font-family:var(--disp);font-size:22px;font-weight:700;}
+.rh-cities{font-size:14px;color:var(--text2);margin-top:3px;}
+.rh-status{font-family:var(--mono);font-size:15px;font-weight:600;}
+.rh-arrow{color:var(--text3);font-size:16px;transition:transform .3s;}
+.region-section.open .rh-arrow{transform:rotate(180deg);}
+.region-body{display:none;padding:18px 20px;background:var(--s1);border-top:1px solid var(--border);}
+.region-section.open .region-body{display:block;}
+.mini-heatmap{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;margin-bottom:6px;}
+.mhc{aspect-ratio:1/1.6;border-radius:3px;cursor:pointer;transition:transform .1s;}
+.mhc:hover{transform:scaleY(1.5);}
+.mhc.now{outline:2px solid #fff;outline-offset:1px;}
+
+/* DAY CHART — bigger everything */
+.day-chart-wrap{overflow-x:auto;}
+.day-chart{display:flex;gap:8px;align-items:flex-end;height:120px;margin-top:10px;min-width:500px;}
+.dc-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end;min-width:46px;}
+.dc-bar{width:100%;border-radius:4px 4px 0 0;min-height:3px;transition:height .7s ease;position:relative;}
+.dc-bar.peak{background:linear-gradient(180deg,#ff4444,#8b0000);}
+.dc-bar.high{background:linear-gradient(180deg,#ff7700,#c05000);}
+.dc-bar.mid{background:linear-gradient(180deg,#ffd600,#a87e00);}
+.dc-bar.low{background:linear-gradient(180deg,#00e676,#00733b);}
+/* BIG labels for day chart */
+.dc-val{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--text);line-height:1;}
+.dc-name{font-family:var(--body);font-size:13px;font-weight:600;color:var(--text2);text-align:center;line-height:1.3;}
+.dc-hbr{font-size:11px;color:var(--text3);}
+
+/* HOUR BADGES */
+.hour-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.hbadge{font-family:var(--mono);font-size:16px;padding:8px 18px;border-radius:20px;font-weight:600;}
+.hbadge.safe{background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.22);color:#00e676;}
+.hbadge.danger{background:rgba(244,67,54,.08);border:1px solid rgba(244,67,54,.22);color:#ff6a6a;}
+
+/* PATTERN BOX */
+.pattern-rows{display:flex;flex-direction:column;gap:9px;margin-top:8px;}
+.prow{display:flex;align-items:center;gap:12px;padding:12px 15px;border-radius:9px;background:var(--s3);border:1px solid var(--border);}
+.prow-icon{font-size:22px;width:30px;text-align:center;flex-shrink:0;}
+.prow-body{flex:1;}
+.prow-title{font-family:var(--disp);font-size:16px;font-weight:700;}
+.prow-desc{font-size:13px;color:var(--text2);margin-top:2px;line-height:1.5;}
+.prow-badge{font-family:var(--mono);font-size:13px;padding:5px 12px;border-radius:12px;white-space:nowrap;font-weight:600;}
+
+/* SALVO INFO BOX */
+.salvo-box{background:rgba(41,182,246,.05);border:1px solid rgba(41,182,246,.2);border-radius:12px;padding:16px 20px;margin-bottom:14px;}
+.salvo-title{font-family:var(--disp);font-size:16px;font-weight:700;color:var(--blue);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.salvo-desc{font-size:14px;color:var(--text2);line-height:1.7;}
+.salvo-desc strong{color:var(--text);}
+
+/* UPDATE BANNER */
+.update-bar{background:rgba(0,230,118,.06);border:1px solid rgba(0,230,118,.18);border-radius:10px;padding:10px 18px;display:flex;align-items:center;gap:12px;font-size:14px;color:var(--text2);}
+.update-bar strong{color:var(--green);}
+.update-time{font-family:var(--mono);font-size:13px;color:var(--text3);margin-right:auto;}
+
+/* WAR BAR */
+.war-bar{background:var(--s2);border:1px solid var(--border);border-radius:14px;display:grid;grid-template-columns:repeat(5,1fr);overflow:hidden;}
+.wb{padding:16px 12px;text-align:center;border-left:1px solid var(--border);}
+.wb:first-child{border-left:none;}
+.wb-n{font-family:var(--disp);font-size:28px;font-weight:800;line-height:1;margin-bottom:4px;}
+.wb-l{font-size:14px;color:var(--text2);line-height:1.4;}
+
+/* GRIDS */
+.row2{display:grid;grid-template-columns:1fr 320px;gap:14px;}
+.row2b{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* TOOLTIP */
+.tip{position:fixed;pointer-events:none;z-index:9999;background:#0a1520;border:1px solid var(--border2);border-radius:8px;padding:9px 13px;font-family:var(--mono);font-size:12px;opacity:0;transition:opacity .12s;line-height:1.8;}
+.tip.show{opacity:1;}
+
+.foot{font-size:12px;color:var(--text3);text-align:center;font-family:var(--mono);letter-spacing:.5px;padding:6px;line-height:1.7;}
+.ac-item:hover{background:rgba(41,182,246,.08) !important;}
+#autocompleteDropdown::-webkit-scrollbar{width:4px;}
+#autocompleteDropdown::-webkit-scrollbar-track{background:var(--s2);}
+#autocompleteDropdown::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+@media(max-width:900px){
+  .row2,.row2b{grid-template-columns:1fr;}
+  .war-bar{grid-template-columns:repeat(3,1fr);}
+  .status-card{grid-template-columns:auto 1fr;}
+  .next-box{display:none;}
+}
+@media(max-width:580px){
+  .topbar{padding:9px 12px;}
+  .logo{font-size:20px;}
+  .hcell,.mhc{border-radius:2px;}
+  .hlbl{font-size:9px;}
+  .dc-val{font-size:13px;}
+  .dc-name{font-size:11px;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">GAMER<em>ALERT</em></div>
+  <div class="topbar-right">
+    <div class="live-badge">
+      <div class="dot" id="liveStatusDot"></div>
+      <span id="liveStatusText">בודק אזעקות...</span>
+    </div>
+    <div class="clock-wrap">
+      <div class="clock-label">ישראל</div>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+  </div>
+</div>
+
+<!-- LIVE ALERT BANNER (shown when active alert detected) -->
+<div class="alert-banner" id="alertBanner">
+  <div class="ab-icon">🚨</div>
+  <div>
+    <div class="ab-text" id="alertText">אזעקה פעילה!</div>
+    <div class="ab-sub" id="alertSub">היכנס למקלט עכשיו</div>
+  </div>
+  <div class="ab-time" id="alertTime"></div>
+</div>
+
+<div class="wrap">
+
+  <!-- DATA UPDATE BAR -->
+  <div class="update-bar">
+    <span>📡</span>
+    <span style="font-size:15px;"><strong>נתונים מעודכנים:</strong> 9 מרץ 2026 · מקור: Alma Research, Times of Israel, IDF</span>
+    <span class="update-time" id="lastApiCheck">בדיקה: --:--</span>
+  </div>
+
+  <!-- SEARCH + CHIPS -->
+  <div class="card">
+    <div class="search-top">
+      <div class="search-label">🔍 עיר / אזור</div>
+      <div class="search-input-wrap" style="position:relative;">
+        <span class="search-icon">🏙</span>
+        <input class="search-input" id="citySearch" type="text" placeholder="חפש עיר... (תל אביב, חיפה, ירושלים, באר שבע, שדרות...)" oninput="onSearch(this.value)" onfocus="onSearch(this.value)" autocomplete="off" onkeydown="onSearchKey(event)">
+        <div id="autocompleteDropdown" style="display:none;position:absolute;top:calc(100% + 4px);right:0;left:0;background:#0d1520;border:1px solid var(--border2);border-radius:10px;z-index:999;max-height:320px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.6);"></div>
+      </div>
+    </div>
+    <div class="chips" id="chipsRow">
+      <span class="chip center active" onclick="selectRegion('center',this)">🏙 מרכז — גוש דן</span>
+      <span class="chip center" onclick="chipClick('תל אביב','center',this)">תל אביב</span>
+      <span class="chip center" onclick="chipClick('ראשון לציון','center',this)">ראשון לציון</span>
+      <span class="chip center" onclick="chipClick('פתח תקווה','center',this)">פתח תקווה</span>
+      <span class="chip center" onclick="chipClick('נתניה','center',this)">נתניה</span>
+      <span class="chip north" onclick="selectRegion('north',this)">🌊 צפון — חיפה</span>
+      <span class="chip north" onclick="chipClick('חיפה','north',this)">חיפה</span>
+      <span class="chip north" onclick="chipClick('נצרת','north',this)">נצרת</span>
+      <span class="chip north" onclick="chipClick('קריית שמונה','north',this)">קריית שמונה</span>
+      <span class="chip jerusalem" onclick="selectRegion('jerusalem',this)">⛩ ירושלים</span>
+      <span class="chip jerusalem" onclick="chipClick('בית שמש','jerusalem',this)">בית שמש</span>
+      <span class="chip south" onclick="selectRegion('south',this)">🌵 דרום — באר שבע</span>
+      <span class="chip south" onclick="chipClick('אשקלון','south',this)">אשקלון</span>
+      <span class="chip south" onclick="chipClick('אשדוד','south',this)">אשדוד</span>
+      <span class="chip south" onclick="chipClick('שדרות','south',this)">שדרות ⚠️</span>
+    </div>
+  </div>
+
+  <!-- STATUS CARD -->
+  <div class="status-card sc-go" id="statusCard">
+    <div class="s-emoji" id="sEmoji">⏳</div>
+    <div>
+      <div class="s-tag">סטטוס עכשיו · שעה <span id="sHour">--</span>:00 · <span id="sRegName">מרכז</span></div>
+      <div class="s-hl" id="sHL">טוען...</div>
+      <div class="s-detail" id="sDetail">מחשב...</div>
+    </div>
+    <div class="next-box">
+      <div class="next-label">חלון בטוח הבא</div>
+      <div class="next-time" id="nextTime">--:--</div>
+      <div class="next-sub" id="nextSub">--</div>
+    </div>
+  </div>
+
+  <!-- GAMES + SAFE WINDOWS -->
+  <div class="row2">
+    <div class="card">
+      <div class="card-lbl">בחר משחק — כמה זמן צריך?</div>
+      <div class="game-grid" id="gameGrid"></div>
+    </div>
+    <div class="card">
+      <div class="card-lbl">חלונות בטוחים היום</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px;" id="swSub">לפי משחק שנבחר</div>
+      <div class="sw-list" id="swList"></div>
+    </div>
+  </div>
+
+  <!-- HEATMAP -->
+  <div class="card">
+    <div class="card-lbl">מפת חום — סיכון לפי שעה (שעון ישראל)</div>
+    <div class="conflict-tabs">
+      <button class="ctab active" onclick="switchConflict('2026',this)">מלחמה 2026</button>
+      <button class="ctab" onclick="switchConflict('2025',this)">יוני 2025</button>
+      <button class="ctab" onclick="switchConflict('combined',this)">משולב</button>
+    </div>
+    <div class="heat-grid" id="heatGrid"></div>
+    <div class="heat-labels" id="heatLabels"></div>
+    <div class="legend">
+      <div class="leg"><div class="leg-sq r0"></div>בטוח (0)</div>
+      <div class="leg"><div class="leg-sq r1"></div>נמוך (1–2)</div>
+      <div class="leg"><div class="leg-sq r3"></div>בינוני (3–4)</div>
+      <div class="leg"><div class="leg-sq r5"></div>גבוה (5)</div>
+      <div class="leg"><div class="leg-sq r6"></div>סכנה (6–7)</div>
+      <div class="leg"><div class="leg-sq" style="background:#fff;outline:2px solid #fff;outline-offset:0;width:13px;height:13px;border-radius:3px;"></div>שעה נוכחית</div>
+    </div>
+  </div>
+
+  <!-- REGION SECTIONS -->
+  <div style="display:flex;flex-direction:column;gap:9px;" id="regionSections">
+    <!-- North -->
+    <div class="region-section north" id="sec-north">
+      <div class="region-header" onclick="toggleSec('north')">
+        <div class="rh-left"><div class="rh-bar"></div><div><div class="rh-name">🌊 צפון</div><div class="rh-cities">חיפה · עכו · נצרת · טבריה · קריות</div></div></div>
+        <div style="display:flex;align-items:center;gap:14px;"><div class="rh-status" id="st-north"></div><div class="rh-arrow">▼</div></div>
+      </div>
+      <div class="region-body">
+        <div style="font-size:14px;color:var(--text2);margin-bottom:12px;">הצפון חשוף לטילים מ<strong style="color:var(--teal)">חיזבאללה</strong> (89+ גלים מאז 2 מרץ) בנוסף לאיראן. <strong style="color:var(--teal)">סיכון גבוה יותר</strong> מהממוצע.</div>
+        <div class="card-lbl" style="margin-bottom:8px;">מפת חום — צפון</div>
+        <div class="mini-heatmap" id="mh-north"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;" id="wins-north"></div>
+      </div>
+    </div>
+    <!-- Center -->
+    <div class="region-section center open" id="sec-center">
+      <div class="region-header" onclick="toggleSec('center')">
+        <div class="rh-left"><div class="rh-bar"></div><div><div class="rh-name">🏙 מרכז — גוש דן</div><div class="rh-cities">ת"א · ר"ג · גבעתיים · חולון · בת ים · ר"ל · פ"ת</div></div></div>
+        <div style="display:flex;align-items:center;gap:14px;"><div class="rh-status" id="st-center"></div><div class="rh-arrow">▼</div></div>
+      </div>
+      <div class="region-body">
+        <div style="font-size:14px;color:var(--text2);margin-bottom:12px;"><strong style="color:var(--green)">המטרה העיקרית של טילי איראן.</strong> ב-8 מרץ: 9 סלבו + פגיעה במרכז הארץ + 7 פצועים. זמן ריצה: 90 שניות.</div>
+        <div class="card-lbl" style="margin-bottom:8px;">מפת חום — מרכז</div>
+        <div class="mini-heatmap" id="mh-center"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;" id="wins-center"></div>
+      </div>
+    </div>
+    <!-- Jerusalem -->
+    <div class="region-section jerusalem" id="sec-jerusalem">
+      <div class="region-header" onclick="toggleSec('jerusalem')">
+        <div class="rh-left"><div class="rh-bar"></div><div><div class="rh-name">⛩ ירושלים</div><div class="rh-cities">ירושלים · בית שמש · מעלה אדומים</div></div></div>
+        <div style="display:flex;align-items:center;gap:14px;"><div class="rh-status" id="st-jerusalem"></div><div class="rh-arrow">▼</div></div>
+      </div>
+      <div class="region-body">
+        <div style="font-size:14px;color:var(--text2);margin-bottom:12px;">ירושלים דווחה כיעד ישיר. ב-5 מרץ: 2 גלים לאזור ירושלים. זמן ריצה: 90 שניות.</div>
+        <div class="card-lbl" style="margin-bottom:8px;">מפת חום — ירושלים</div>
+        <div class="mini-heatmap" id="mh-jerusalem"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;" id="wins-jerusalem"></div>
+      </div>
+    </div>
+    <!-- South -->
+    <div class="region-section south" id="sec-south">
+      <div class="region-header" onclick="toggleSec('south')">
+        <div class="rh-left"><div class="rh-bar"></div><div><div class="rh-name">🌵 דרום</div><div class="rh-cities">באר שבע · אשדוד · אשקלון · נגב</div></div></div>
+        <div style="display:flex;align-items:center;gap:14px;"><div class="rh-status" id="st-south"></div><div class="rh-arrow">▼</div></div>
+      </div>
+      <div class="region-body">
+        <div style="font-size:14px;color:var(--text2);margin-bottom:12px;">ב-5 מרץ: 2 גלים לאזור הדרום. אשדוד ובאר שבע דווחו עם פגיעות.</div>
+        <div class="card-lbl" style="margin-bottom:8px;">מפת חום — דרום</div>
+        <div class="mini-heatmap" id="mh-south"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;" id="wins-south"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY CHART + PATTERN -->
+  <div class="row2b">
+
+    <!-- DAY CHART -->
+    <div class="card">
+      <div class="card-lbl">גלי תקיפה לפי יום — מלחמה 2026</div>
+
+      <!-- SALVO EXPLAINER -->
+      <div class="salvo-box">
+        <div class="salvo-title">💡 מה זה "סלבו" / "גל תקיפה"?</div>
+        <div class="salvo-desc">
+          <strong>סלבו (Salvo)</strong> = שיגור של מספר טילים בו-זמנית ממספר מוצאים. כל "גל" = אירוע שיגור אחד שגורם לאזעקה. <strong>יום 1 (1 מרץ): 64 גלים</strong> = 64 אזעקות נפרדות — הייתה כוונה לכלות את האוכלוסייה במקלטים. <strong>מגמה:</strong> ↓ 90% מאז יום השיא.
+        </div>
+      </div>
+
+      <div class="day-chart-wrap">
+        <div class="day-chart" id="dayChart"></div>
+      </div>
+    </div>
+
+    <!-- PATTERN -->
+    <div class="card">
+      <div class="card-lbl">דפוס יומי — שיא סכנה vs. חלון בטוח</div>
+      <div class="pattern-rows">
+        <div class="prow" style="border-color:rgba(244,67,54,.25);">
+          <div class="prow-icon">🚨</div>
+          <div class="prow-body">
+            <div class="prow-title" style="color:#ff6a6a;">שעת שיא הסכנה</div>
+            <div class="prow-desc">01:00–02:00 — בשתי המלחמות, ריכוז סלבו גבוה בשעה זו. גם 13:00–16:00 מסוכן.</div>
+          </div>
+          <div class="prow-badge" style="background:rgba(244,67,54,.1);border:1px solid rgba(244,67,54,.3);color:#ff6a6a;">01:00</div>
+        </div>
+        <div class="prow" style="border-color:rgba(255,109,0,.2);">
+          <div class="prow-icon">⚠️</div>
+          <div class="prow-body">
+            <div class="prow-title" style="color:var(--orange);">3 קבוצות סיכון</div>
+            <div class="prow-desc">00:00–02:00 · 04:00–06:00 · 13:00–16:00 — מחזורי תקיפה עיקריים</div>
+          </div>
+          <div class="prow-badge" style="background:rgba(255,109,0,.1);border:1px solid rgba(255,109,0,.3);color:var(--orange);">3 קבוצות</div>
+        </div>
+        <div class="prow" style="border-color:rgba(0,230,118,.2);">
+          <div class="prow-icon">🎮</div>
+          <div class="prow-body">
+            <div class="prow-title" style="color:var(--green);">שעת הזהב לגיימרים</div>
+            <div class="prow-desc">09:00–12:00 — השקט ביותר בשתי המלחמות. שחק כאן!</div>
+          </div>
+          <div class="prow-badge" style="background:rgba(0,230,118,.09);border:1px solid rgba(0,230,118,.22);color:var(--green);">09–12</div>
+        </div>
+        <div class="prow" style="border-color:rgba(0,230,118,.15);">
+          <div class="prow-icon">🟢</div>
+          <div class="prow-body">
+            <div class="prow-title" style="color:var(--green);">חלון שקט שני</div>
+            <div class="prow-desc">18:00–20:00 — בין מחזורי הצהריים ללילה</div>
+          </div>
+          <div class="prow-badge" style="background:rgba(0,230,118,.09);border:1px solid rgba(0,230,118,.22);color:var(--green);">18–20</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BEST/WORST HOURS -->
+  <div class="row2b">
+    <div class="card">
+      <div class="card-lbl">🎮 שעות הכי בטוחות לשחק</div>
+      <div class="hour-badges" id="bestHours"></div>
+    </div>
+    <div class="card">
+      <div class="card-lbl">🚨 שעות שחייב להימנע</div>
+      <div class="hour-badges" id="worstHours"></div>
+    </div>
+  </div>
+
+  <!-- WAR BAR -->
+  <div class="war-bar">
+    <div class="wb"><div class="wb-n" style="color:var(--red)">167+</div><div class="wb-l">גלי תקיפה<br>איראן (2026)</div></div>
+    <div class="wb"><div class="wb-n" style="color:#ff9922">89+</div><div class="wb-l">גלי תקיפה<br>חיזבאללה (2–9/3)</div></div>
+    <div class="wb"><div class="wb-n" style="color:var(--yellow)">90%</div><div class="wb-l">ירידה מיום<br>השיא (64 גלים)</div></div>
+    <div class="wb"><div class="wb-n" style="color:var(--blue)">3,000+</div><div class="wb-l">מטרות הותקפו<br>ע"י ארה"ב+ישראל</div></div>
+    <div class="wb"><div class="wb-n" style="color:var(--green)">300+</div><div class="wb-l">משגרים הושמדו<br>ע"י חיל האוויר</div></div>
+  </div>
+
+  <div class="foot">
+    📡 אזעקות live: Pikud HaOref API — נבדק כל 30 שניות (צריך IP ישראלי) · נתונים: Alma Research · Times of Israel · IDF · ACLED<br>
+    ⚠️ הנתונים מבוססי סטטיסטיקה בלבד — תמיד הישמע להנחיות פיקוד העורף. אל תסתמך על אתר זה בלבד.
+  </div>
+
+</div><!-- /wrap -->
+<div class="tip" id="tip"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// RISK DATA (0-7)
+// ══════════════════════════════════════════════
+
+// 2026 — updated with Mar 7-8 data
+// Mar 6 evening: 8:40pm + 9:54pm attacks → raised hour 20,21
+// Mar 7: multiple central + south salvos evening
+// Mar 8: 9 salvos, fragment hit central Israel, late afternoon cluster
+const risk2026 = [
+//  00  01  02  03  04  05  06  07  08  09  10  11
+    7,  7,  6,  5,  7,  7,  5,  4,  6,  2,  2,  2,
+//  12  13  14  15  16  17  18  19  20  21  22  23
+    3,  7,  7,  6,  6,  4,  3,  3,  5,  6,  5,  6
+];
+
+// 2025 twelve-day war — nightly pattern
+const risk2025 = [
+//  00  01  02  03  04  05  06  07  08  09  10  11
+    6,  7,  7,  6,  5,  6,  5,  6,  5,  2,  2,  2,
+//  12  13  14  15  16  17  18  19  20  21  22  23
+    2,  3,  3,  3,  4,  5,  5,  5,  7,  7,  7,  7
+];
+
+const riskCombined = risk2026.map((v,i)=>Math.round(v*0.6+risk2025[i]*0.4));
+
+// Region modifier (+/- on top of base)
+const REG_MOD = {
+  north:     [1,1,1,1,1,1,1,1,0,0,0,0, 0,0,0,0,0,0,0,0,1,1,1,1],
+  center:    [0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0],
+  jerusalem: [-1,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0, 0,0,0,0,-1,-1,0,0,-1,-1,-1,-1],
+  south:     [-1,-1,-1,0,-1,-1,-1,-1,0,0,0,0, 0,0,0,0,0,-1,0,0,-1,-1,-1,-1]
+};
+const REG_NAME = {north:'צפון',center:'מרכז',jerusalem:'ירושלים',south:'דרום'};
+
+let activeConflict='2026', activeRegion='center', selectedGame='cs2-premier';
+let baseRisk=[...risk2026];
+
+function getRegRisk(reg){
+  return baseRisk.map((v,i)=>Math.max(0,Math.min(7,v+REG_MOD[reg][i])));
+}
+function getActiveRisk(){return getRegRisk(activeRegion);}
+
+// ══════════════════════════════════════════════
+// GAMES
+// ══════════════════════════════════════════════
+const GAMES=[
+  {id:'cs2-premier', icon:'🎯',name:'CS2 Premier',   mode:'Competitive',  min:45,max:75, c:'#00b4ff'},
+  {id:'cs2-dm',      icon:'🎯',name:'CS2 DM',         mode:'Deathmatch',   min:10,max:15, c:'#00b4ff'},
+  {id:'valorant',    icon:'⚡',name:'Valorant',        mode:'Competitive',  min:30,max:50, c:'#ff4655'},
+  {id:'val-rush',    icon:'⚡',name:'Valorant Rush',   mode:'Spike Rush',   min:8, max:15, c:'#ff4655'},
+  {id:'lol',         icon:'⚔️',name:'League of Legends',mode:'Ranked',      min:30,max:50, c:'#c8aa6e'},
+  {id:'fortnite',    icon:'🌀',name:'Fortnite',        mode:'Battle Royale',min:15,max:30, c:'#40e0d0'},
+  {id:'apex',        icon:'🔥',name:'Apex Legends',    mode:'Battle Royale',min:20,max:30, c:'#ff6030'},
+  {id:'fifa',        icon:'⚽',name:'EA FC / FIFA',    mode:'Online Match', min:10,max:20, c:'#00c853'},
+  {id:'dota2',       icon:'🛡',name:'Dota 2',          mode:'Ranked',       min:40,max:70, c:'#e53935'},
+  {id:'ow2',         icon:'🦸',name:'Overwatch 2',     mode:'Competitive',  min:15,max:25, c:'#fa9c1e'},
+];
+
+function buildGameGrid(){
+  const g=document.getElementById('gameGrid');
+  g.innerHTML='';
+  GAMES.forEach(gm=>{
+    const sel=gm.id===selectedGame;
+    const el=document.createElement('div');
+    el.className='game-card'+(sel?' selected':'');
+    el.onclick=()=>selectGame(gm.id);
+    el.innerHTML=`
+      <div class="game-icon">${gm.icon}</div>
+      <div style="flex:1">
+        <div class="game-name" style="${sel?`color:${gm.c}`:'color:var(--text)'}">${gm.name}</div>
+        <div class="game-mode">${gm.mode}</div>
+      </div>
+      <div class="game-dur" style="${sel?`border-color:${gm.c};color:${gm.c}`:''}">
+        ${gm.min}–${gm.max} דק'
+      </div>`;
+    g.appendChild(el);
+  });
+}
+function selectGame(id){
+  selectedGame=id;
+  buildGameGrid();
+  const h=getILHour();
+  buildSafeWindows(h);
+  updateSwSub();
+  rebuildRegionWindows(h);
+}
+function updateSwSub(){
+  const gm=GAMES.find(x=>x.id===selectedGame);
+  document.getElementById('swSub').textContent=`${gm.icon} ${gm.name} — ${gm.min}–${gm.max} דק'`;
+}
+
+// ══════════════════════════════════════════════
+// HEATMAP
+// ══════════════════════════════════════════════
+function rlvl(r){return Math.max(0,Math.min(7,Math.round(r)));}
+
+function buildHeatmap(hour){
+  const risk=getActiveRisk();
+  const grid=document.getElementById('heatGrid');
+  const lbls=document.getElementById('heatLabels');
+  grid.innerHTML='';lbls.innerHTML='';
+  for(let h=0;h<24;h++){
+    const r=risk[h];
+    const c=document.createElement('div');
+    c.className=`hcell r${rlvl(r)}${h===hour?' now':''}`;
+    c.addEventListener('mousemove',e=>showTip(e,h,r));
+    c.addEventListener('mouseleave',hideTip);
+    grid.appendChild(c);
+    const l=document.createElement('div');
+    l.className='hlbl';
+    l.textContent=h%3===0?String(h).padStart(2,'0'):'';
+    lbls.appendChild(l);
+  }
+}
+
+function buildMiniHeatmap(reg,elId,hour){
+  const risk=getRegRisk(reg);
+  const el=document.getElementById(elId);
+  if(!el)return;
+  el.innerHTML='';
+  for(let h=0;h<24;h++){
+    const c=document.createElement('div');
+    c.className=`mhc r${rlvl(risk[h])}${h===hour?' now':''}`;
+    c.title=`${String(h).padStart(2,'0')}:00 — ${risk[h]}/7`;
+    el.appendChild(c);
+  }
+}
+
+// ══════════════════════════════════════════════
+// STATUS CARD
+// ══════════════════════════════════════════════
+function updateStatus(hour){
+  const risk=getActiveRisk();
+  const r=risk[hour];
+  const card=document.getElementById('statusCard');
+  const lvls=['sc-go','sc-go','sc-warn','sc-warn','sc-risk','sc-risk','sc-danger','sc-danger'];
+  card.className='status-card '+lvls[rlvl(r)];
+  document.getElementById('sEmoji').textContent=r<=1?'🎮':r<=3?'⚠️':r<=5?'🟠':'🚨';
+  const hlText=['GO — תפתח!','GO — אפשר לשחק','WAIT — המתן','WAIT — לא אידיאלי','RISKY — לא מומלץ','RISKY — סיכון גבוה','DANGER — אל תשחק!','DANGER — שיא סכנה!'];
+  document.getElementById('sHL').textContent=hlText[rlvl(r)];
+  document.getElementById('sHour').textContent=String(hour).padStart(2,'0');
+  document.getElementById('sRegName').textContent=REG_NAME[activeRegion];
+  const gm=GAMES.find(x=>x.id===selectedGame);
+  const details=[
+    `<strong>שעה ${hour}:00</strong> — חלון שקט ב${REG_NAME[activeRegion]}. פתח ${gm?.name||'משחק'} — ציון סיכון ${r}/7`,
+    `<strong>שעה ${hour}:00</strong> — בטוח יחסית. ציון ${r}/7.`,
+    `<strong>שעה ${hour}:00</strong> — סיכון בינוני (${r}/7). שקול להמתין לחלון הבא.`,
+    `<strong>שעה ${hour}:00</strong> — סיכון בינוני-גבוה (${r}/7). רצוי להמתין.`,
+    `<strong>שעה ${hour}:00</strong> — שעה מסוכנת ב${REG_NAME[activeRegion]} (${r}/7). לא מומלץ.`,
+    `<strong>שעה ${hour}:00</strong> — סיכון גבוה! (${r}/7). אל תתחיל משחק ארוך.`,
+    `<strong>שעה ${hour}:00</strong> — שיא סכנה ב${REG_NAME[activeRegion]} (${r}/7)! שב ליד מקלט.`,
+    `<strong>שעה ${hour}:00</strong> — סכנה מקסימלית (${r}/7)! אל תשחק.`,
+  ];
+  document.getElementById('sDetail').innerHTML=details[rlvl(r)];
+
+  // region header statuses
+  ['north','center','jerusalem','south'].forEach(reg=>{
+    const rr=getRegRisk(reg)[hour];
+    const el=document.getElementById(`st-${reg}`);
+    if(!el)return;
+    const cs=['#00e676','#00e676','#a67c00','#a67c00','#e6a000','#d94f00','#ff5555','#ff3333'];
+    const ls=['✅ בטוח','✅ בטוח','🟡 בינוני','🟡 בינוני','🟡 גבוה-בינוני','🟠 גבוה','🔴 סכנה','🚨 שיא'];
+    el.textContent=ls[rlvl(rr)];
+    el.style.color=cs[rlvl(rr)];
+  });
+}
+
+// ══════════════════════════════════════════════
+// SAFE WINDOWS
+// ══════════════════════════════════════════════
+function findWindows(risk,maxMin){
+  const needed=Math.max(1,Math.ceil(maxMin/60));
+  const wins=[];
+  for(let h=0;h<24;h++){
+    let ok=true;
+    for(let k=0;k<needed;k++){if(risk[(h+k)%24]>3){ok=false;break;}}
+    if(ok)wins.push(h);
+  }
+  const merged=[];
+  for(const h of wins){
+    if(merged.length&&merged[merged.length-1].end===h)merged[merged.length-1].end=h+1;
+    else merged.push({start:h,end:h+1});
+  }
+  return merged;
+}
+
+function buildSafeWindows(hour){
+  const gm=GAMES.find(x=>x.id===selectedGame);
+  const risk=getActiveRisk();
+  const wins=findWindows(risk,gm.max);
+  const list=document.getElementById('swList');
+  list.innerHTML='';
+  const next=wins.find(w=>w.start>=hour)||wins[0];
+  if(next){
+    document.getElementById('nextTime').textContent=`${String(next.start).padStart(2,'0')}:00`;
+    document.getElementById('nextSub').textContent=`${(next.end-next.start)*60} דק'`;
+  }
+  if(!wins.length){
+    list.innerHTML='<div style="font-size:14px;color:var(--text2);padding:8px 0;">אין חלונות מספיק ארוכים כרגע</div>';
+    return;
+  }
+  wins.forEach(w=>{
+    const isCurr=hour>=w.start&&hour<w.end;
+    const isPast=w.end<=hour;
+    const dur=(w.end-w.start)*60;
+    const el=document.createElement('div');
+    el.className=`swi${isCurr?' now-win':''}${isPast?' past':''}`;
+    el.innerHTML=`
+      <div>
+        <div class="swi-time">${String(w.start).padStart(2,'0')}:00 – ${String(w.end).padStart(2,'0')}:00</div>
+        <div class="swi-dur">${dur} דקות · ${gm.icon} ${gm.name}</div>
+      </div>
+      <div class="swi-tag ${isCurr?'tag-now':isPast?'tag-past':'tag-soon'}">${isCurr?'✓ עכשיו':isPast?'עבר':'בקרוב'}</div>`;
+    list.appendChild(el);
+  });
+}
+
+function rebuildRegionWindows(hour){
+  const gm=GAMES.find(x=>x.id===selectedGame);
+  ['north','center','jerusalem','south'].forEach(reg=>{
+    const el=document.getElementById(`wins-${reg}`);
+    if(!el)return;
+    const wins=findWindows(getRegRisk(reg),gm.max);
+    el.innerHTML=wins.slice(0,6).map(w=>`
+      <span style="padding:5px 11px;border-radius:14px;font-family:var(--mono);font-size:12px;
+        background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.18);color:var(--green);">
+        ${String(w.start).padStart(2,'0')}–${String(w.end).padStart(2,'0')}</span>`).join('')
+    ||'<span style="font-size:13px;color:var(--text2);">אין חלונות</span>';
+  });
+}
+
+// ══════════════════════════════════════════════
+// DAY CHART — UPDATED DATA (Alma Research)
+// ══════════════════════════════════════════════
+// dayData — נתונים ידועים + היום דינמי
+// נתונים אמיתיים מפיקוד העורף (מעודכן ידנית)
+const KNOWN_HISTORY = [
+  { date: '2026-02-24', count: 8  },
+  { date: '2026-02-25', count: 12 },
+  { date: '2026-02-26', count: 6  },
+  { date: '2026-02-27', count: 9  },
+  { date: '2026-02-28', count: 25 },
+  { date: '2026-03-01', count: 64 },
+  { date: '2026-03-02', count: 25 },
+  { date: '2026-03-03', count: 9  },
+  { date: '2026-03-04', count: 11 },
+  { date: '2026-03-05', count: 9  },
+  { date: '2026-03-06', count: 12 },
+  { date: '2026-03-07', count: 19 },
+  { date: '2026-03-08', count: 9  },
+  { date: '2026-03-09', count: 5  },
+];
+let dayData = [];
+
+const HE_DAYS = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+
+function getClsForCount(v) {
+  if (v === 0)  return 'low';
+  if (v <= 10)  return 'mid';
+  if (v <= 30)  return 'high';
+  if (v <= 50)  return 'high';
+  return 'peak';
+}
+
+// Build last 14 days — known history + dynamic today
+function buildDayDataFromHistory(dynamicAlerts) {
+  // Merge known history with dynamic alerts
+  const countsByDate = {};
+
+  // Start with known static data
+  for (const entry of KNOWN_HISTORY) {
+    countsByDate[entry.date] = entry.count;
+  }
+
+  // Override/add with dynamic data from API (today + recent)
+  for (const a of dynamicAlerts) {
+    const dateStr = (a.alertDate || a.date || '').slice(0, 10);
+    if (!dateStr || dateStr.length < 10) continue;
+    countsByDate[dateStr] = (countsByDate[dateStr] || 0) + 1;
+  }
+
+  // Build last 14 days
+  const result = [];
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
+
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const yyyy = d.getFullYear();
+    const mm   = String(d.getMonth() + 1).padStart(2, '0');
+    const dd   = String(d.getDate()).padStart(2, '0');
+    const key  = `${yyyy}-${mm}-${dd}`;
+    const displayDate = `${dd}/${mm}`;
+    const dayLabel = HE_DAYS[d.getDay()];
+    const count = countsByDate[key] || 0;
+    const isToday = i === 0;
+
+    result.push({
+      label:    dayLabel,
+      date:     displayDate,
+      fullDate: key,
+      v:        count,
+      cls:      getClsForCount(count),
+      note:     isToday ? 'היום' : '',
+      isToday,
+    });
+  }
+  return result;
+}
+
+// Load full history from GitHub Pages alerts-history.json
+// Updated every hour by GitHub Actions from an Israeli-IP-free server
+async function loadFullHistory() {
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }));
+  const todayKey = now.getFullYear() + '-' +
+    String(now.getMonth()+1).padStart(2,'0') + '-' +
+    String(now.getDate()).padStart(2,'0');
+
+  try {
+    // Fetch from same origin — alerts-history.json in the repo root
+    const r = await fetchWithTimeout('alerts-history.json?t=' + Date.now(), 10000);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (!Array.isArray(data)) throw new Error('not array');
+
+    const todayAlerts = data.filter(a => (a.alertDate||'').startsWith(todayKey));
+    todayWaveCount = todayAlerts.length;
+    alertHistory = todayAlerts.slice(0, 80).map(a => ({
+      time:   (a.alertDate||'').slice(11,16) || '--:--',
+      cities: Array.isArray(a.data) ? a.data : [],
+      title:  a.title || 'ירי רקטות',
+    }));
+
+    dayData = buildDayDataFromHistory(data);
+    buildDayChart();
+    updateLiveUI();
+    console.log('[GamerAlert] History loaded:', data.length, 'alerts,', todayWaveCount, 'today');
+
+  } catch(e) {
+    console.log('[GamerAlert] history err:', e.message);
+    // Fallback — show chart with known static data
+    dayData = buildDayDataFromHistory([]);
+    buildDayChart();
+  }
+}
+
+function buildDayChart(){
+  const c = document.getElementById('dayChart');
+  if (!c) return;
+  c.innerHTML = '';
+  if (!dayData.length) return;
+
+  const max = Math.max(...dayData.map(d => d.v), 1);
+
+  dayData.forEach(d => {
+    const col = document.createElement('div');
+    col.className = 'dc-col';
+
+    const todayStyle = d.isToday
+      ? 'outline:2px solid rgba(255,255,255,.7);outline-offset:3px;box-shadow:0 0 10px rgba(255,255,255,.2);'
+      : '';
+    const todayVal = d.isToday
+      ? 'style="color:#fff;font-size:15px;"'
+      : '';
+    const todayDate = d.isToday
+      ? `style="color:var(--blue);font-weight:800;"` 
+      : '';
+
+    col.innerHTML = `
+      <div class="dc-val" ${todayVal}>${d.v}</div>
+      <div class="dc-bar ${d.cls}" style="height:${Math.max(4,(d.v/max*100))}%;${todayStyle}${d.cls==='peak'?'box-shadow:0 0 12px rgba(255,68,68,.6);':''}"></div>
+      <div class="dc-name">${d.label}<br><span class="dc-hbr" ${todayDate}>${d.date}</span></div>`;
+
+    if (d.note) col.title = d.note;
+    c.appendChild(col);
+  });
+}
+
+// ══════════════════════════════════════════════
+// BEST / WORST HOURS
+// ══════════════════════════════════════════════
+function buildHourBadges(){
+  const risk=getActiveRisk();
+  const sorted=risk.map((r,h)=>({h,r})).sort((a,b)=>a.r-b.r);
+  const best=document.getElementById('bestHours');
+  const worst=document.getElementById('worstHours');
+  best.innerHTML='';worst.innerHTML='';
+  sorted.slice(0,8).forEach(({h})=>{
+    const b=document.createElement('div');
+    b.className='hbadge safe';
+    b.textContent=`${String(h).padStart(2,'0')}:00`;
+    best.appendChild(b);
+  });
+  sorted.slice(-6).reverse().forEach(({h})=>{
+    const b=document.createElement('div');
+    b.className='hbadge danger';
+    b.textContent=`${String(h).padStart(2,'0')}:00`;
+    worst.appendChild(b);
+  });
+}
+
+// ══════════════════════════════════════════════
+// CITY DATABASE — name, aliases, region, stats
+// ══════════════════════════════════════════════
+// ── helper so chips also open city panel ──
+function chipClick(cityName, reg, el){
+  selectRegion(reg, el);
+  const city = findCity(cityName);
+  if(city){
+    document.getElementById('citySearch').value = city.he;
+    document.getElementById('autocompleteDropdown').style.display = 'none';
+    showCityPanel(city);
+    document.querySelectorAll('.region-section').forEach(s=>s.classList.remove('open'));
+    document.getElementById('sec-'+city.reg)?.classList.add('open');
+    const h = getILHour();
+    buildMiniHeatmap(city.reg,'mh-'+city.reg,h);
+    rebuildRegionWindows(h);
+  }
+}
+
+const C=(he,en,reg,runSec,hits2026,waves2026,hit2025,note)=>({
+  he,en,reg,runSec,hits2026,waves2026,hit2025,note,shelterSec:runSec,
+  color:reg==='center'?'#00e676':reg==='north'?'#00bcd4':reg==='jerusalem'?'#ffd600':'#ff8f00'
+});
+
+const CITIES = [
+  // ══ CENTER — גוש דן ══
+  C('תל אביב','tel aviv','center',90,4,'חלק מ-148+ גלים למרכז',12,'המטרה המרכזית — מרבית הטילים כוונו לגוש דן. נפגעה בשתי המלחמות.'),
+  C('ראשון לציון','rishon lezion','center',90,3,'חלק מגלי המרכז',8,'8 מרץ: שברים נפלו באזור. עיר הולדת המשתמש.'),
+  C('פתח תקווה','petah tikva','center',90,2,'חלק מגלי המרכז',5,'מרכז גוש דן — מכוון יחד עם ת"א.'),
+  C('רמת גן','ramat gan','center',90,3,'חלק מגלי המרכז',6,'3 מרץ: פגיעה ישירה בבניין — פינוי דיירים.'),
+  C('גבעתיים','givatayim','center',90,1,'חלק מגלי המרכז',3,'מרכז גוש דן — 90 שניות למקלט.'),
+  C('חולון','holon','center',90,2,'חלק מגלי המרכז',4,'אזור מרכז — פגיעות שברים דווחו.'),
+  C('בת ים','bat yam','center',90,1,'חלק מגלי המרכז',4,'יוני 2025: נפגעה ישירות ב-15/6 (9 הרוגים בסביבה).'),
+  C('הרצליה','herzliya','center',90,1,'חלק מגלי המרכז',2,'צפון גוש דן — 90 שניות.'),
+  C('נתניה','netanya','center',90,2,'חלק מגלי המרכז והשרון',3,'שרון — מכוונת לעיתים עם גוש דן.'),
+  C('רחובות','rehovot','center',90,1,'חלק מגלי המרכז',2,'דרום מרכז — 90 שניות.'),
+  C('מודיעין','modiin','center',90,1,'חלק מגלי המרכז',1,'מודיעין-מכבים-רעות — בין מרכז לירושלים.'),
+  C('לוד','lod','center',90,2,'חלק מגלי המרכז',3,'8 מרץ: שברי טיל נפלו בלוד.'),
+  C('רמלה','ramla','center',90,2,'חלק מגלי המרכז',3,'סמוכה ללוד — אותה רמת סיכון.'),
+  C('כפר סבא','kfar saba','center',90,1,'חלק מגלי השרון',2,'שרון — צפון גוש דן.'),
+  C('הוד השרון','hod hasharon','center',90,1,'חלק מגלי השרון',2,'שרון — 90 שניות.'),
+  C('רעננה','raanana','center',90,1,'חלק מגלי השרון',2,'שרון — 90 שניות.'),
+  C('קריית אונו','kiryat ono','center',90,1,'חלק מגלי המרכז',2,'מרכז — בין גוש דן לשפלה.'),
+  C('בני ברק','bnei brak','center',90,2,'חלק מגלי המרכז',4,'צמוד לת"א — אותה רמת סיכון.'),
+  C('אור יהודה','or yehuda','center',90,1,'חלק מגלי המרכז',2,'מרכז גוש דן — 90 שניות.'),
+  C('אזור','azor','center',90,1,'חלק מגלי המרכז',1,'מרכז — 90 שניות.'),
+  C('בת דגן','bat dagan','center',90,1,'חלק מגלי המרכז',1,'שפלה — 90 שניות.'),
+  C('גן יבנה','gan yavne','center',90,1,'חלק מגלי המרכז',1,'שפלה — 90 שניות.'),
+  C('יבנה','yavne','center',90,1,'חלק מגלי המרכז/דרום',2,'בין גוש דן לאשדוד — 90 שניות.'),
+  C('נס ציונה','nes ziona','center',90,1,'חלק מגלי המרכז',2,'שפלה מרכזית — 90 שניות.'),
+  C('גדרה','gedera','center',90,1,'חלק מגלי המרכז',1,'שפלה דרומית — 90 שניות.'),
+  C('קריית מלאכי','kiryat malakhi','center',90,1,'חלק מגלי המרכז',2,'שפלה — 90 שניות.'),
+  C('רמת השרון','ramat hasharon','center',90,1,'חלק מגלי המרכז',2,'צפון ת"א — 90 שניות.'),
+  C('גבעת שמואל','givat shmuel','center',90,1,'חלק מגלי המרכז',1,'גוש דן מזרח — 90 שניות.'),
+  C('אלעד','elad','center',90,1,'חלק מגלי המרכז',1,'שרון — 90 שניות.'),
+  C('ראש העין','rosh haayin','center',90,1,'חלק מגלי המרכז',1,'שרון מזרח — 90 שניות.'),
+  C('טייבה','taibe','center',90,1,'חלק מגלי השרון',1,'שרון — ישוב ערבי.'),
+  C('טירה','tire','center',90,1,'חלק מגלי השרון',1,'שרון — ישוב ערבי.'),
+  C('קלנסווה','qalansawe','center',90,1,'חלק מגלי השרון',1,'שרון — ישוב ערבי.'),
+  C('כפר יונה','kfar yona','center',90,1,'חלק מגלי השרון',1,'שרון — 90 שניות.'),
+  C('תל מונד','tel mond','center',90,1,'חלק מגלי השרון',1,'שרון — 90 שניות.'),
+  C('נורדיה','nordia','center',90,1,'חלק מגלי השרון',1,'שרון — מושב.'),
+  C('עמישב','amisav','center',90,1,'חלק מגלי השרון',1,'שרון — מושב.'),
+  C('כפר נטר','kfar netter','center',90,1,'חלק מגלי השרון',1,'שרון — מושב.'),
+  C('אבן יהודה','even yehuda','center',90,1,'חלק מגלי השרון',1,'שרון — 90 שניות.'),
+  C('נתיב הל"ה','nativ halamed he','center',90,1,'חלק מגלי המרכז',1,'שפלה — מושב.'),
+  C('מזכרת בתיה','mazkeret batya','center',90,1,'חלק מגלי המרכז',1,'שפלה — מושב.'),
+  C('בית דגן','beit dagan','center',90,1,'חלק מגלי המרכז',1,'מרכז — 90 שניות.'),
+  C('יהוד','yehud','center',90,1,'חלק מגלי המרכז',1,'גוש דן — 90 שניות.'),
+  C('אור עקיבא','or akiva','center',90,1,'חלק מגלי החוף',1,'חוף כרמל — 90 שניות.'),
+  C('חדרה','hadera','center',90,1,'חלק מגלי החוף/שרון',2,'חוף כרמל — 90 שניות.'),
+  C('זכרון יעקב','zichron yaakov','center',90,1,'חלק מגלי החוף',1,'כרמל — 90 שניות.'),
+  C('פרדס חנה','pardes hana','center',90,1,'חלק מגלי החוף',1,'חוף כרמל — 90 שניות.'),
+  C('בנימינה','binyamina','center',90,1,'חלק מגלי החוף',1,'חוף כרמל — 90 שניות.'),
+  C('עתלית','atlit','center',90,1,'חלק מגלי החוף',1,'חוף כרמל — 90 שניות.'),
+
+  // ══ NORTH — צפון ══
+  C('חיפה','haifa','north',60,6,'89+ גלי חיזבאללה + חלק מגלי איראן',7,'חיזבאללה מכוון לחיפה קבוע — 8 נפצעו 6–7 מרץ. קריות בסכנה גבוהה.'),
+  C('עכו','akko','north',45,3,'גלי חיזבאללה לצפון',4,'סמוך לגבול לבנון — 45 שניות בלבד.'),
+  C('נצרת','nazareth','north',60,2,'גלי חיזבאללה לגליל',3,'גליל — מרחק בינוני מהגבול.'),
+  C('טבריה','tiberias','north',60,2,'גלי חיזבאללה לגליל',3,'ים כנרת — גליל מזרחי.'),
+  C('נהריה','nahariya','north',30,5,'גלי חיזבאללה לצפון',6,'⚠️ עיר גבול! 30 שניות בלבד. תחת אש מתמדת.'),
+  C('צפת','zefat','north',45,2,'גלי חיזבאללה לגליל',2,'גליל עליון — 45 שניות.'),
+  C('עפולה','afula','north',60,1,'גלי חיזבאללה לגליל',2,'עמק יזרעאל — פחות מכוון מחיפה.'),
+  C('כרמיאל','karmiel','north',45,2,'גלי חיזבאללה לגליל',2,'גליל תחתון — 45 שניות.'),
+  C('קריית שמונה','kiryat shmona','north',15,8,'גלי חיזבאללה לגליל עליון',8,'⚠️ עיר גבול! 15 שניות בלבד — קרובה ביותר ללבנון.'),
+  C('מגדל העמק','migdal haemek','north',60,1,'גלי חיזבאללה לגליל',2,'גליל תחתון — 60 שניות.'),
+  C('קריית ביאליק','kiryat bialik','north',60,3,'גלי חיזבאללה לקריות',4,'קריות — חיפה מטרו.'),
+  C('קריית ים','kiryat yam','north',60,3,'גלי חיזבאללה לקריות',4,'קריות — חוף הים.'),
+  C('קריית מוצקין','kiryat motzkin','north',60,3,'גלי חיזבאללה לקריות',4,'קריות — חיפה מטרו.'),
+  C('קריית אתא','kiryat ata','north',60,3,'גלי חיזבאללה לקריות',3,'קריות — חיפה מטרו.'),
+  C('קריית חיים','kiryat haim','north',60,3,'גלי חיזבאללה לקריות',4,'קריות חוף — חיפה מטרו.'),
+  C('נשר','nesher','north',60,2,'גלי חיזבאללה לחיפה',3,'כרמל — חיפה מטרו.'),
+  C('טירת כרמל','tirat carmel','north',60,2,'גלי חיזבאללה לחיפה',2,'כרמל — 60 שניות.'),
+  C('דליית אל-כרמל','daliyat alcarmel','north',60,1,'גלי חיזבאללה לגליל',1,'הכרמל — כפר דרוזי.'),
+  C('עוספיה','ussifiyye','north',60,1,'גלי חיזבאללה לגליל',1,'הכרמל — כפר דרוזי.'),
+  C('שפרעם','shefaram','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — עיר מעורבת.'),
+  C('נוף הגליל','nof hagalil','north',60,2,'גלי חיזבאללה לגליל',2,'נצרת עילית — גליל תחתון.'),
+  C('יוקנעם','yokneam','north',60,1,'גלי חיזבאללה לעמק',1,'עמק יזרעאל — 60 שניות.'),
+  C('בית שאן','beit shean','north',75,1,'גלי חיזבאללה לגליל',1,'עמק בית שאן — מזרח.'),
+  C('זכריה','zekharia','north',60,1,'גלי חיזבאללה לגליל',1,'גליל.'),
+  C('ראש פינה','rosh pinna','north',45,2,'גלי חיזבאללה לגליל עליון',2,'גליל עליון — 45 שניות.'),
+  C('מגדל','migdal','north',60,1,'גלי חיזבאללה לגליל',1,'כנרת מערב.'),
+  C('צמח','zemach','north',60,1,'גלי חיזבאללה לגליל',1,'כנרת דרום.'),
+  C('עין גב','ein gev','north',60,1,'גלי חיזבאללה לגולן',1,'כנרת מזרח — קיבוץ.'),
+  C('מעלות תרשיחא','maalot tarshiha','north',30,3,'גלי חיזבאללה לצפון',3,'גליל מערבי — קרוב לגבול. 30 שניות.'),
+  C('שלומי','shlomi','north',20,4,'גלי חיזבאללה לצפון',4,'⚠️ עיר גבול — 20 שניות בלבד.'),
+  C('מצפה רמון','mitzpe ramon','south',90,1,'מינימלי',1,'נגב — מרוחק. 90 שניות.'),
+  C('חצור הגלילית','hazor haglilit','north',45,1,'גלי חיזבאללה לגליל',1,'גליל עליון — 45 שניות.'),
+  C('גדות','gadot','north',30,2,'גלי חיזבאללה לגליל עליון',2,'גליל עליון — קיבוץ, 30 שניות.'),
+  C('שער הגולן','shaar hagolan','north',45,1,'גלי חיזבאללה לגולן',1,'גולן — קיבוץ.'),
+  C('כינרת','kinneret','north',60,1,'גלי חיזבאללה לגליל',1,'כנרת — קיבוץ.'),
+  C('גינוסר','ginossar','north',60,1,'גלי חיזבאללה לגליל',1,'כנרת מערב — קיבוץ.'),
+  C('אלון תבור','alon tavor','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — מושב.'),
+  C('כפר תבור','kfar tavor','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — מושב.'),
+  C('נעורה','naura','north',60,1,'גלי חיזבאללה לגליל',1,'עמק יזרעאל.'),
+  C('בית לחם הגלילית','beit lechem haglilit','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — ישוב.'),
+  C('אפיק','afik','north',60,1,'גלי חיזבאללה לגולן',1,'גולן — קיבוץ.'),
+  C('חניתה','hanita','north',20,2,'גלי חיזבאללה לצפון',2,'⚠️ קיבוץ גבול — 20 שניות.'),
+  C('ילין','yilin','north',45,1,'גלי חיזבאללה לגליל',1,'גליל מערבי.'),
+  C('טמרה','tamra','north',45,1,'גלי חיזבאללה לגליל',1,'גליל מערבי — עיר ערבית.'),
+  C('בסמת טבעון','basmat tabun','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — ישוב ערבי.'),
+  C('ג\'ת','jat','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון.'),
+  C('ערערה','araara','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — ישוב ערבי.'),
+  C('ביר אל-מכסור','bir almaksor','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — ישוב ערבי.'),
+  C('כפר מנדא','kfar manda','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — ישוב ערבי.'),
+  C('סח\'נין','sakhnin','north',60,1,'גלי חיזבאללה לגליל',1,'גליל — עיר ערבית.'),
+  C('ערבה','arabe','north',60,1,'גלי חיזבאללה לגליל',1,'גליל — ישוב ערבי.'),
+  C('דיר חנא','deir hanna','north',60,1,'גלי חיזבאללה לגליל',1,'גליל — ישוב ערבי.'),
+  C('כפר כנא','kafr kanna','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — ישוב ערבי.'),
+  C('ריינה','reina','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — ישוב ערבי.'),
+  C('נחף','nahaf','north',60,1,'גלי חיזבאללה לגליל',1,'גליל — ישוב ערבי.'),
+  C('עין מאהל','ein mahel','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — ישוב ערבי.'),
+  C('מגאר','mghar','north',60,1,'גלי חיזבאללה לגליל',1,'גליל — ישוב דרוזי.'),
+  C('יפיע','yafi','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — ישוב ערבי.'),
+  C('אבו סנאן','abu snan','north',60,1,'גלי חיזבאללה לגליל',1,'גליל מערבי — ישוב ערבי.'),
+  C('כפר יאסיף','kfar yasif','north',45,1,'גלי חיזבאללה לצפון',1,'גליל מערבי — ישוב ערבי.'),
+  C('ג\'ולס','julis','north',45,1,'גלי חיזבאללה לצפון',1,'גליל מערבי — ישוב דרוזי.'),
+  C('עיילבון','eilabun','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — ישוב ערבי.'),
+  C('טורעאן','turan','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון — ישוב ערבי.'),
+  C('כאבול','kabul','north',45,1,'גלי חיזבאללה לגליל',1,'גליל מערבי — ישוב ערבי.'),
+  C('עין חוד','ein hod','north',60,1,'גלי חיזבאללה לגליל',1,'כרמל — ישוב אמנים.'),
+  C('מזרע','mazraa','north',60,1,'גלי חיזבאללה לגליל',1,'גליל תחתון.'),
+  C('כפר ברא','kfar bara','center',90,1,'חלק מגלי השרון',1,'שרון — ישוב ערבי.'),
+  C('ג\'לג\'וליה','jaljulia','center',90,1,'חלק מגלי השרון',1,'שרון — ישוב ערבי.'),
+  C('קלנסווה','qalansawe','center',90,1,'חלק מגלי השרון',1,'שרון — ישוב ערבי.'),
+
+  // ══ JERUSALEM & SURROUNDINGS ══
+  C('ירושלים','jerusalem','jerusalem',90,4,'5 מרץ: 2 גלים, 8 מרץ: אזעקה',9,'יעד מדיני/סמלי — נפגעה בשתי המלחמות. 7 פצועים ב-2 מרץ.'),
+  C('בית שמש','beit shemesh','jerusalem',90,2,'חלק מגלי ירושלים',3,'מצב בינוני — פחות מכוון מירושלים.'),
+  C('מעלה אדומים','maale adumim','jerusalem',90,1,'חלק מגלי ירושלים',1,'מזרח ירושלים — 90 שניות.'),
+  C('גבעת זאב','givat zeev','jerusalem',90,1,'חלק מגלי ירושלים',1,'פרבר ירושלים — 90 שניות.'),
+  C('אבו גוש','abu ghosh','jerusalem',90,1,'חלק מגלי ירושלים',1,'כניסה לירושלים — ישוב ערבי.'),
+  C('מטה יהודה','mateh yehuda','jerusalem',90,1,'חלק מגלי ירושלים',1,'הרי יהודה — מועצה אזורית.'),
+  C('גוש עציון','gush etzion','jerusalem',90,1,'חלק מגלי ירושלים',1,'הר חברון — מועצה אזורית.'),
+  C('אפרת','efrat','jerusalem',90,1,'חלק מגלי ירושלים',1,'גוש עציון — עיר.'),
+  C('בית לחם','bethlehem','jerusalem',90,1,'חלק מגלי ירושלים',1,'רשות הפלסטינית — לידע כללי.'),
+  C('קריית ענבים','kiryat anavim','jerusalem',90,1,'חלק מגלי ירושלים',1,'כניסה לירושלים — קיבוץ.'),
+  C('מעלה החמישה','maaleh hahamisha','jerusalem',90,1,'חלק מגלי ירושלים',1,'הרי יהודה — קיבוץ.'),
+  C('כסלון','kesalon','jerusalem',90,1,'חלק מגלי ירושלים',1,'הרי יהודה — מושב.'),
+  C('צובה','tzuba','jerusalem',90,1,'חלק מגלי ירושלים',1,'הרי יהודה — קיבוץ.'),
+
+  // ══ SOUTH — דרום ══
+  C('באר שבע','beer sheva','south',60,3,'5 מרץ: 2 גלים לדרום',8,'בירת הנגב — יעד משמעותי. 2 מרץ: פצוע בינוני + 14 קל.'),
+  C('אשדוד','ashdod','south',75,3,'חלק מגלי הדרום',9,'נמל אשדוד — יעד אסטרטגי. פגיעות בשתי המלחמות.'),
+  C('אשקלון','ashkelon','south',60,3,'חלק מגלי הדרום',10,'קרוב לעזה — חשוף לטילי עזה + איראן.'),
+  C('קריית גת','kiryat gat','south',75,1,'חלק מגלי הדרום',4,'שפלה — פחות מכוון מאשדוד.'),
+  C('אילת','eilat','south',120,1,'מינימלי',2,'מרוחק — 120 שניות. ב-2023 נפגע מחות\'ים.'),
+  C('נתיבות','netivot','south',45,1,'חלק מגלי הדרום',3,'עוטף עזה — 45 שניות.'),
+  C('שדרות','sderot','south',15,2,'גלי דרום + עזה',5,'⚠️ 15 שניות בלבד! הכי קרוב לעזה.'),
+  C('דימונה','dimona','south',75,1,'מינימלי',2,'נגב — 75 שניות.'),
+  C('ערד','arad','south',90,1,'מינימלי',1,'נגב — 90 שניות.'),
+  C('מצפה רמון','mitzpe ramon','south',90,1,'מינימלי',1,'נגב עמוק — 90 שניות.'),
+  C('ירוחם','yeruham','south',90,1,'מינימלי',1,'נגב — 90 שניות.'),
+  C('אופקים','ofakim','south',45,1,'חלק מגלי הדרום',3,'עוטף עזה — 45 שניות.'),
+  C('רהט','rahat','south',60,1,'חלק מגלי הדרום',2,'נגב — עיר בדואית.'),
+  C('לקיה','lakiya','south',60,1,'חלק מגלי הדרום',1,'נגב — ישוב בדואי.'),
+  C('הוד נגב','hod negev','south',60,1,'חלק מגלי הדרום',1,'נגב — מועצה אזורית.'),
+  C('ניר עם','nir am','south',15,1,'גלי עזה',2,'⚠️ עוטף עזה — 15 שניות.'),
+  C('כפר עזה','kfar aza','south',10,1,'גלי עזה',3,'⚠️ גבול עזה — 10 שניות! קיבוץ.'),
+  C('בארי','beeri','south',10,1,'גלי עזה',3,'⚠️ גבול עזה — 10 שניות! קיבוץ (7 אוקטובר).'),
+  C('כיסופים','kissufim','south',10,1,'גלי עזה',2,'⚠️ גבול עזה — 10 שניות! קיבוץ.'),
+  C('נחל עוז','nachal oz','south',10,1,'גלי עזה',3,'⚠️ גבול עזה — 10 שניות! קיבוץ.'),
+  C('רעים','reim','south',15,1,'גלי עזה',2,'⚠️ עוטף עזה — 15 שניות.'),
+  C('אור הנר','or haner','south',15,1,'גלי עזה',2,'⚠️ עוטף עזה — 15 שניות.'),
+  C('יד מרדכי','yad mordechai','south',20,1,'גלי דרום',2,'עוטף עזה — 20 שניות.'),
+  C('ניצנים','nitzanim','south',30,1,'גלי דרום',2,'דרום — 30 שניות.'),
+  C('מגן','magen','south',10,1,'גלי עזה',2,'⚠️ גבול עזה — 10 שניות! קיבוץ.'),
+  C('סעד','saad','south',15,1,'גלי עזה',2,'⚠️ עוטף עזה — 15 שניות.'),
+  C('תלמי אליהו','talme eliyahu','south',15,1,'גלי עזה',2,'⚠️ עוטף עזה — 15 שניות.'),
+  C('גבים','gavim','south',20,1,'גלי דרום',1,'עוטף עזה — מושב.'),
+  C('קיבוץ גלויות','kibbutz galuyyot','south',20,1,'גלי דרום',1,'עוטף עזה — מושב.'),
+  C('בית קמה','beit kama','south',60,1,'חלק מגלי הדרום',1,'נגב — מושב.'),
+  C('להבים','lehavim','south',60,1,'חלק מגלי הדרום',1,'נגב — ישוב.'),
+  C('מיתר','meitar','south',60,1,'חלק מגלי הדרום',1,'נגב — ישוב.'),
+  C('עומר','omer','south',60,1,'חלק מגלי הדרום',2,'נגב — פרבר ב"ש.'),
+  C('תל שבע','tel sheva','south',60,1,'חלק מגלי הדרום',1,'נגב — עיר בדואית.'),
+  C('שגב שלום','segev shalom','south',60,1,'חלק מגלי הדרום',1,'נגב — ישוב בדואי.'),
+  C('כסייפה','kseifa','south',60,1,'חלק מגלי הדרום',1,'נגב — ישוב בדואי.'),
+  C('חורה','hura','south',60,1,'חלק מגלי הדרום',1,'נגב — עיר בדואית.'),
+  C('קריית חינוך','kiryat hinuch','south',75,1,'חלק מגלי הדרום',1,'שפלה — 75 שניות.'),
+  C('מבשרת ציון','mevasseret zion','jerusalem',90,1,'חלק מגלי ירושלים',1,'כניסה לירושלים.'),
+  C('גבעת שפירא','givat shapira','south',75,1,'חלק מגלי הדרום',1,'שפלה.'),
+  C('קרית ענבים','kiryat anavim','jerusalem',90,1,'חלק מגלי ירושלים',1,'הרי יהודה.'),
+  C('פלמחים','palmachim','center',90,1,'חלק מגלי המרכז',1,'חוף — מרכז/דרום.'),
+  C('גן יבנה','gan yavne','center',90,1,'חלק מגלי המרכז',1,'שפלה — 90 שניות.'),
+  C('אשתאול','eshtaol','jerusalem',90,1,'חלק מגלי ירושלים',1,'שפלה/הרי יהודה.'),
+  C('בית שמש','beit shemesh','jerusalem',90,2,'חלק מגלי ירושלים',3,'הרי יהודה — 90 שניות.'),
+  C('בית גוברין','beit guvrin','jerusalem',90,1,'חלק מגלי ירושלים',1,'שפלה — קיבוץ.'),
+  C('תל לכיש','tel lachish','south',75,1,'חלק מגלי הדרום',1,'שפלה דרומית.'),
+  C('קריית ארבע','kiryat arba','jerusalem',90,1,'חלק מגלי ירושלים',1,'סמוכה לחברון.'),
+  C('אלון שבות','alon shvut','jerusalem',90,1,'חלק מגלי ירושלים',1,'גוש עציון — ישוב.'),
+  C('נווה דניאל','neve daniel','jerusalem',90,1,'חלק מגלי ירושלים',1,'גוש עציון — ישוב.'),
+  C('אלעזר','elazar','jerusalem',90,1,'חלק מגלי ירושלים',1,'גוש עציון — ישוב.'),
+];
+
+// Build search index: every token maps to city
+function buildSearchIndex(){
+  const idx=[];
+  CITIES.forEach(c=>{
+    idx.push({tokens:[c.he, c.en, ...c.he.split(' '), ...c.en.split(' ')], city:c});
+  });
+  return idx;
+}
+const SEARCH_IDX=buildSearchIndex();
+
+function findCity(query){
+  const q=query.trim().toLowerCase().replace(/['"]/g,'');
+  if(!q||q.length<2)return null;
+  // exact match first
+  for(const{tokens,city}of SEARCH_IDX){
+    for(const t of tokens){
+      if(t.toLowerCase()===q)return city;
+    }
+  }
+  // partial match
+  for(const{tokens,city}of SEARCH_IDX){
+    for(const t of tokens){
+      const tl=t.toLowerCase();
+      if(tl.includes(q)||q.includes(tl))return city;
+    }
+  }
+  return null;
+}
+
+let searchTimeout=null;
+let acSelectedIdx = -1;
+
+function onSearch(val){
+  clearTimeout(searchTimeout);
+  const q = val.trim();
+  const dd = document.getElementById('autocompleteDropdown');
+
+  if(!q || q.length < 1){
+    hideCityPanel();
+    dd.style.display = 'none';
+    return;
+  }
+
+  // Build suggestions
+  const ql = q.toLowerCase();
+  const matches = [];
+  const seen = new Set();
+  for(const {tokens, city} of SEARCH_IDX){
+    if(seen.has(city.he)) continue;
+    for(const t of tokens){
+      if(t.toLowerCase().startsWith(ql) || t.toLowerCase().includes(ql)){
+        seen.add(city.he);
+        matches.push(city);
+        break;
+      }
+    }
+    if(matches.length >= 8) break;
+  }
+
+  if(matches.length === 0){
+    dd.style.display = 'none';
+    searchTimeout = setTimeout(()=>{ hideCityPanel(); showNoResult(q); }, 300);
+    return;
+  }
+
+  // Render dropdown
+  acSelectedIdx = -1;
+  const regColors = {center:'var(--green)',north:'var(--teal)',jerusalem:'var(--yellow)',south:'var(--amber)'};
+  const regNames  = {center:'מרכז',north:'צפון',jerusalem:'ירושלים',south:'דרום'};
+  dd.innerHTML = matches.map((city, i) => {
+    // Count today's alerts for this city
+    const todayCityAlerts = alertHistory.filter(a =>
+      a.cities && a.cities.some(c => typeof c==='string' && (c.includes(city.he)||city.he.includes(c.split(' ')[0])))
+    ).length;
+    const alertBadge = todayCityAlerts > 0
+      ? `<span style="font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:8px;background:rgba(244,67,54,.15);border:1px solid rgba(244,67,54,.3);color:#ff6b6b;">${todayCityAlerts} 🚨</span>`
+      : '';
+    return `<div class="ac-item" data-idx="${i}"
+      onclick="selectCityFromAC('${city.he}')"
+      onmouseenter="acHover(${i})"
+      style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s;">
+      <span style="width:4px;height:24px;border-radius:2px;background:${regColors[city.reg]};flex-shrink:0;"></span>
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);">${city.he}</div>
+        <div style="font-size:11px;color:var(--text3);">${regNames[city.reg]} · ריצה למקלט: ${city.shelterSec}ש'</div>
+      </div>
+      ${alertBadge}
+      <span style="font-size:11px;color:${regColors[city.reg]};font-weight:600;">${regNames[city.reg]}</span>
+    </div>`;
+  }).join('');
+  dd.style.display = 'block';
+}
+
+function acHover(idx){
+  acSelectedIdx = idx;
+  document.querySelectorAll('.ac-item').forEach((el,i) => {
+    el.style.background = i === idx ? 'rgba(41,182,246,.08)' : '';
+  });
+}
+
+function onSearchKey(e){
+  const dd = document.getElementById('autocompleteDropdown');
+  if(dd.style.display === 'none') return;
+  const items = dd.querySelectorAll('.ac-item');
+  if(e.key === 'ArrowDown'){
+    e.preventDefault();
+    acSelectedIdx = Math.min(acSelectedIdx+1, items.length-1);
+    items.forEach((el,i) => el.style.background = i===acSelectedIdx?'rgba(41,182,246,.08)':'');
+  } else if(e.key === 'ArrowUp'){
+    e.preventDefault();
+    acSelectedIdx = Math.max(acSelectedIdx-1, 0);
+    items.forEach((el,i) => el.style.background = i===acSelectedIdx?'rgba(41,182,246,.08)':'');
+  } else if(e.key === 'Enter' && acSelectedIdx >= 0){
+    e.preventDefault();
+    items[acSelectedIdx]?.click();
+  } else if(e.key === 'Escape'){
+    dd.style.display = 'none';
+  }
+}
+
+function selectCityFromAC(cityHe){
+  const dd = document.getElementById('autocompleteDropdown');
+  dd.style.display = 'none';
+  document.getElementById('citySearch').value = cityHe;
+  const city = CITIES.find(c => c.he === cityHe);
+  if(!city) return;
+  showCityPanel(city);
+  selectRegion(city.reg, null);
+  document.querySelectorAll('.region-section').forEach(s=>s.classList.remove('open'));
+  document.getElementById('sec-'+city.reg)?.classList.add('open');
+  const h = getILHour();
+  buildMiniHeatmap(city.reg,'mh-'+city.reg,h);
+  rebuildRegionWindows(h);
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  if(!e.target.closest('.search-input-wrap')){
+    document.getElementById('autocompleteDropdown').style.display = 'none';
+  }
+});
+
+// ── CITY DETAIL PANEL ──
+function showCityPanel(city){
+  let panel=document.getElementById('cityPanel');
+  if(!panel){
+    panel=document.createElement('div');
+    panel.id='cityPanel';
+    const wrap=document.querySelector('.wrap');
+    const searchCard=wrap.children[1];
+    wrap.insertBefore(panel,searchCard.nextSibling);
+  }
+
+  const gm=GAMES.find(x=>x.id===selectedGame);
+  const regRisk=getRegRisk(city.reg);
+  const h=getILHour();
+  const curRisk=regRisk[h];
+  const rv=Math.min(7,Math.round(curRisk));
+  const rColors=['#00e676','#00e676','#2d7a45','#a67c00','#e6a000','#d94f00','#b01010','#6b0000'];
+  const riskColor=rColors[rv];
+  const riskText=['✅ בטוח לגמרי','✅ בטוח','🟢 נמוך','🟡 בינוני','🟡 בינוני-גבוה','🟠 גבוה','🔴 סכנה גבוהה','🚨 שיא סכנה'][rv];
+  const riskAdvisory=['פתח משחק עכשיו — שקט יחסי','פתח משחק עכשיו','שקול להמתין לחלון הבא','סיכון בינוני — לא מומלץ','הימנע מהתחלת משחק ארוך','שעה מסוכנת — אל תשחק','סכנה גבוהה — הישאר ליד מקלט','שיא סכנה — אל תתרחק ממקלט!'][rv];
+
+  // safe windows
+  const wins=findWindows(regRisk,gm.max);
+  const winHtml=wins.slice(0,6).map(w=>{
+    const isCurr=h>=w.start&&h<w.end;
+    const isPast=w.end<=h;
+    return `<span style="padding:6px 14px;border-radius:14px;font-family:'Share Tech Mono',monospace;font-size:13px;
+      opacity:${isPast?0.4:1};
+      background:${isCurr?'rgba(0,230,118,.15)':'rgba(0,230,118,.05)'};
+      border:1px solid ${isCurr?'rgba(0,230,118,.5)':'rgba(0,230,118,.15)'};
+      color:${isCurr?'#00e676':'#3d9e6e'};">
+      ${isCurr?'▶ ':''}${String(w.start).padStart(2,'0')}:00–${String(w.end).padStart(2,'0')}:00</span>`;
+  }).join('')||`<span style="color:#6a9abb;font-size:14px;">אין חלונות בטוחים כרגע עבור ${gm.name}</span>`;
+
+  // heatmap
+  const hmColors=['#00e676','#00b849','#2d7a45','#a67c00','#e6a000','#d94f00','#b01010','#6b0000'];
+  let hmHtml='<div style="display:grid;grid-template-columns:repeat(24,1fr);gap:3px;margin:8px 0 3px;">';
+  for(let i=0;i<24;i++){
+    const r=Math.min(7,Math.round(regRisk[i]));
+    hmHtml+=`<div title="${String(i).padStart(2,'0')}:00 — סיכון ${r}/7" style="height:22px;border-radius:3px;background:${hmColors[r]};${i===h?'outline:2px solid #fff;outline-offset:1px;':''}cursor:pointer;"></div>`;
+  }
+  hmHtml+='</div><div style="display:grid;grid-template-columns:repeat(24,1fr);gap:3px;">';
+  for(let i=0;i<24;i++) hmHtml+=`<div style="font-size:9px;color:#3a6680;text-align:center;font-family:monospace;">${i%6===0?String(i).padStart(2,'0'):''}</div>`;
+  hmHtml+='</div>';
+
+  const runColor=city.shelterSec<=30?'#ff4444':city.shelterSec<=60?'#ff8f00':'#ffd600';
+  const regLabel={'center':'מרכז','north':'צפון','jerusalem':'ירושלים','south':'דרום'}[city.reg];
+
+  panel.style.cssText=`background:#0d1520;border:2px solid ${city.color}55;border-radius:14px;padding:22px 24px;position:relative;animation:fadeSlide .25s ease;`;
+
+  // Build alert history for this city
+  const cityAlertHistory = alertHistory.filter(a =>
+    a.cities && a.cities.some(c => typeof c==='string' && (c.includes(city.he)||city.he.includes(c.split(' ')[0])))
+  ).slice(0,10);
+
+  const historyHtml = cityAlertHistory.length
+    ? cityAlertHistory.map(a=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:7px;background:rgba(244,67,54,.06);border:1px solid rgba(244,67,54,.15);margin-bottom:5px;">
+          <span style="font-family:var(--mono);font-size:12px;color:var(--blue);">${a.time}</span>
+          <span style="font-size:13px;color:var(--text2);flex:1;">${a.title||'ירי רקטות'}</span>
+          <span style="font-size:11px;color:var(--text3);">${a.cities?a.cities.slice(0,3).join(', '):''}</span>
+        </div>`).join('')
+    : `<div style="font-size:13px;color:var(--text3);padding:8px;">אין אזעקות מתועדות היום באזור זה</div>`;
+
+  panel.innerHTML=`
+  <style>@keyframes fadeSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}</style>
+
+  <!-- LIVE ALERT BADGE -->
+  <div id="cityLiveAlertBadge" style="display:none;background:rgba(244,67,54,.15);border:1px solid rgba(244,67,54,.4);border-radius:8px;padding:8px 14px;margin-bottom:12px;font-family:var(--mono);font-size:13px;color:#ff6b6b;font-weight:700;animation:flashbg 1s infinite alternate;"></div>
+
+  <!-- data tag for live refresh -->
+  <span data-city-he="${city.he}" style="display:none;"></span>
+
+  <!-- CLOSE -->
+  <button onclick="document.getElementById('cityPanel').remove();document.getElementById('citySearch').value='';"
+    style="position:absolute;top:12px;left:14px;background:rgba(255,255,255,.05);border:1px solid #2a3a50;border-radius:6px;color:#6a9abb;font-size:13px;padding:4px 12px;cursor:pointer;transition:all .15s;"
+    onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#6a9abb'">✕ סגור</button>
+
+  <!-- CITY HEADER -->
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-left:60px;">
+    <div style="width:5px;height:50px;background:${city.color};border-radius:3px;box-shadow:0 0 10px ${city.color}66;flex-shrink:0;"></div>
+    <div style="flex:1;">
+      <div style="font-family:'Exo 2',sans-serif;font-size:28px;font-weight:800;color:${city.color};line-height:1;">${city.he}</div>
+      <div style="font-size:14px;color:#6a9abb;margin-top:3px;">אזור ${regLabel} · זמן ריצה למקלט: <span style="color:${runColor};font-weight:700;">${city.shelterSec} שניות</span></div>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 1: עכשיו ═══ -->
+  <div style="background:rgba(0,0,0,.3);border:1px solid #1a2e45;border-radius:11px;padding:16px 18px;margin-bottom:14px;">
+    <div style="font-family:'Exo 2',sans-serif;font-size:15px;font-weight:800;color:#29b6f6;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+      <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#29b6f6;box-shadow:0 0 6px #29b6f6;animation:blink 1.6s infinite;"></span>
+      עכשיו — שעה ${String(h).padStart(2,'0')}:00
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div style="background:#090e16;border:1px solid #182840;border-radius:9px;padding:14px 16px;">
+        <div style="font-family:'Exo 2',sans-serif;font-size:22px;font-weight:800;color:${riskColor};">${riskText}</div>
+        <div style="font-size:13px;color:#6a9abb;margin-top:4px;">סטטוס סיכון כרגע</div>
+      </div>
+      <div style="background:#090e16;border:1px solid #182840;border-radius:9px;padding:14px 16px;">
+        <div style="font-family:'Exo 2',sans-serif;font-size:18px;font-weight:700;color:#bdd8e8;">${riskAdvisory}</div>
+        <div style="font-size:13px;color:#6a9abb;margin-top:4px;">המלצה עכשיו עבור ${gm.icon} ${gm.name}</div>
+      </div>
+    </div>
+    <div style="font-family:'Exo 2',sans-serif;font-size:14px;font-weight:700;color:#29b6f6;margin-bottom:8px;">🎮 חלונות בטוחים היום — ${gm.name} (${gm.min}–${gm.max} דק')</div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px;">${winHtml}</div>
+    <div style="margin-top:12px;">
+      <div style="font-family:'Exo 2',sans-serif;font-size:13px;font-weight:700;color:#29b6f6;margin-bottom:5px;">מפת סיכון שעתית — ${city.he}</div>
+      ${hmHtml}
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 2: מלחמה 2026 (עכשיו, פעילה) ═══ -->
+  <div style="background:rgba(244,67,54,.04);border:1px solid rgba(244,67,54,.2);border-radius:11px;padding:16px 18px;margin-bottom:14px;">
+    <div style="font-family:'Exo 2',sans-serif;font-size:15px;font-weight:800;color:#ff6b6b;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+      🔴 מלחמה 2026 — פעילה עכשיו (28 פבר – היום)
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;">
+      <div style="background:#090e16;border:1px solid #2a1515;border-radius:9px;padding:12px;text-align:center;">
+        <div style="font-family:'Exo 2',sans-serif;font-size:26px;font-weight:800;color:#f44336;line-height:1;">${city.hits2026}</div>
+        <div style="font-size:12px;color:#6a9abb;margin-top:5px;line-height:1.4;">פגיעות/שברים<br>ישירות 2026</div>
+      </div>
+      <div style="background:#090e16;border:1px solid #2a1515;border-radius:9px;padding:12px;text-align:center;">
+        <div style="font-family:'Exo 2',sans-serif;font-size:26px;font-weight:800;color:#ff6b6b;line-height:1;">167+</div>
+        <div style="font-size:12px;color:#6a9abb;margin-top:5px;line-height:1.4;">גלי תקיפה<br>סה"כ לישראל</div>
+      </div>
+      <div style="background:#090e16;border:1px solid #2a1515;border-radius:9px;padding:12px;text-align:center;">
+        <div style="font-family:'Exo 2',sans-serif;font-size:26px;font-weight:800;color:#ff8f00;line-height:1;">${curRisk}/7</div>
+        <div style="font-size:12px;color:#6a9abb;margin-top:5px;line-height:1.4;">ציון סיכון<br>שעה ${String(h).padStart(2,'0')}:00</div>
+      </div>
+    </div>
+    <div style="background:rgba(41,182,246,.05);border:1px solid rgba(41,182,246,.12);border-radius:8px;padding:11px 14px;font-size:14px;color:#bdd8e8;line-height:1.7;">
+      <strong style="color:#29b6f6;">גלים לאזור:</strong> ${city.waves2026}<br>
+      <strong style="color:#29b6f6;">📌 פרטים:</strong> ${city.note}
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 3: מלחמה יוני 2025 ═══ -->
+  <div style="background:rgba(255,143,0,.03);border:1px solid rgba(255,143,0,.18);border-radius:11px;padding:16px 18px;">
+    <div style="font-family:'Exo 2',sans-serif;font-size:15px;font-weight:800;color:#ff8f00;margin-bottom:12px;">
+      📁 מלחמת 12 הימים — יוני 2025 (13–24 יוני)
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="background:#090e16;border:1px solid #2a1f0a;border-radius:9px;padding:12px;text-align:center;">
+        <div style="font-family:'Exo 2',sans-serif;font-size:26px;font-weight:800;color:#ff8f00;line-height:1;">${city.hit2025}</div>
+        <div style="font-size:12px;color:#6a9abb;margin-top:5px;line-height:1.4;">גלים שהגיעו<br>לאזור ב-2025</div>
+      </div>
+      <div style="background:#090e16;border:1px solid #2a1f0a;border-radius:9px;padding:12px;text-align:center;">
+        <div style="font-family:'Exo 2',sans-serif;font-size:26px;font-weight:800;color:#ffd600;line-height:1;">550+</div>
+        <div style="font-size:12px;color:#6a9abb;margin-top:5px;line-height:1.4;">טילי בלסטי סה"כ<br>12 הימים</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:13px;color:#8a7a55;line-height:1.6;">
+      מלחמה זו נגמרה עם הפסקת אש ב-24 יוני 2025. הנתונים משמשים להשוואת דפוסים.
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 4: היסטוריית אזעקות היום ═══ -->
+  <div style="background:rgba(41,182,246,.03);border:1px solid rgba(41,182,246,.15);border-radius:11px;padding:16px 18px;margin-top:14px;">
+    <div style="font-family:'Exo 2',sans-serif;font-size:15px;font-weight:800;color:#29b6f6;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+      <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#29b6f6;animation:blink 1.6s infinite;"></span>
+      היסטוריית אזעקות היום — ${city.he}
+      <span style="font-size:12px;font-family:var(--mono);color:var(--text3);margin-right:auto;">${cityAlertHistory.length} אירועים</span>
+    </div>
+    ${historyHtml}
+  </div>
+  `;
+}
+
+function hideCityPanel(){
+  document.getElementById('cityPanel')?.remove();
+}
+
+function showNoResult(q){
+  let panel=document.getElementById('cityPanel');
+  if(!panel){
+    panel=document.createElement('div');
+    panel.id='cityPanel';
+    const wrap=document.querySelector('.wrap');
+    wrap.insertBefore(panel,wrap.children[2]);
+  }
+  panel.style.cssText='background:#0d1520;border:1px solid #1f3550;border-radius:14px;padding:18px 22px;';
+  panel.innerHTML=`<div style="font-size:15px;color:#6a9abb;">🔍 לא נמצאה עיר עבור "<strong style="color:#bdd8e8;">${q}</strong>" — נסה: תל אביב, חיפה, ירושלים, באר שבע, אשדוד, שדרות...</div>`;
+}
+function selectRegion(reg,chip){
+  activeRegion=reg;
+  document.getElementById('sRegName').textContent=REG_NAME[reg];
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  if(chip)chip.classList.add('active');
+  else document.querySelectorAll(`.chip.${reg}`)[0]?.classList.add('active');
+  const h=getILHour();
+  buildHeatmap(h);
+  updateStatus(h);
+  buildSafeWindows(h);
+  buildHourBadges();
+}
+
+function toggleSec(reg){
+  const sec=document.getElementById(`sec-${reg}`);
+  sec.classList.toggle('open');
+  if(sec.classList.contains('open')){
+    const h=getILHour();
+    buildMiniHeatmap(reg,`mh-${reg}`,h);
+    rebuildRegionWindows(h);
+  }
+}
+function switchConflict(type,btn){
+  document.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  activeConflict=type;
+  baseRisk=type==='2026'?[...risk2026]:type==='2025'?[...risk2025]:[...riskCombined];
+  const h=getILHour();
+  buildHeatmap(h);updateStatus(h);buildSafeWindows(h);buildHourBadges();
+  ['north','center','jerusalem','south'].forEach(r=>{
+    if(document.getElementById(`sec-${r}`)?.classList.contains('open'))buildMiniHeatmap(r,`mh-${r}`,h);
+  });
+}
+
+// ══════════════════════════════════════════════
+// TOOLTIP
+// ══════════════════════════════════════════════
+const riskLabels=['✅ בטוח','🟢 נמוך','🟢 נמוך-בינוני','🟡 בינוני','🟡 בינוני-גבוה','🟠 גבוה','🔴 גבוה מאוד','🚨 שיא סכנה'];
+function showTip(e,h,r){
+  const t=document.getElementById('tip');
+  t.innerHTML=`<span style="color:var(--blue)">${String(h).padStart(2,'0')}:00–${String(h+1).padStart(2,'0')}:00</span><br>${riskLabels[rlvl(r)]}<br><span style="color:var(--dim2);font-size:11px">ציון ${r}/7 · ${REG_NAME[activeRegion]}</span>`;
+  t.style.left=(e.clientX+14)+'px';t.style.top=(e.clientY-48)+'px';
+  t.classList.add('show');
+}
+function hideTip(){document.getElementById('tip').classList.remove('show');}
+
+// ══════════════════════════════════════════════
+// CLOCK
+// ══════════════════════════════════════════════
+function getILHour(){
+  return new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Jerusalem'})).getHours();
+}
+function tickClock(){
+  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Jerusalem'}));
+  document.getElementById('clock').textContent=
+    `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  return now.getHours();
+}
+
+// ══════════════════════════════════════════════
+// LIVE ALERT — api.tzevaadom.co.il (ציבורי, ללא proxy)
+// עובד ישירות מהדפדפן, ללא CORS issues
+// ══════════════════════════════════════════════
+let todayWaveCount  = 0;
+let alertHistory    = [];
+let consecutiveErrors = 0;
+let lastAlertKey    = null;
+
+// ── Cloudflare Worker proxy URL ──
+// אחרי deploy של cloudflare-worker.js, שנה את השורה הזו ל-URL שלך:
+// לדוגמה: https://gamer-alert.YOUR-NAME.workers.dev
+const WORKER_URL  = 'https://billowing-frog-d48e.galhaviv888.workers.dev';
+const LIVE_URL    = WORKER_URL;
+const HISTORY_URL = WORKER_URL + '?type=history';
+
+function fetchWithTimeout(url, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+    fetch(url, { cache: 'no-store' })
+      .then(r  => { clearTimeout(timer); resolve(r); })
+      .catch(e => { clearTimeout(timer); reject(e);  });
+  });
+}
+
+// loadTodayHistory replaced by loadFullHistory above
+
+// ── Main live poll every 5s ──
+async function checkAlerts() {
+  const timeEl = document.getElementById('lastApiCheck');
+  const dotEl  = document.getElementById('liveStatusDot');
+  const textEl = document.getElementById('liveStatusText');
+  const now    = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Jerusalem'}));
+  const timeStr = String(now.getHours()).padStart(2,'0') + ':' +
+                  String(now.getMinutes()).padStart(2,'0') + ':' +
+                  String(now.getSeconds()).padStart(2,'0');
+
+  try {
+    const r = await fetchWithTimeout(LIVE_URL, 5000);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    consecutiveErrors = 0;
+    timeEl.textContent = 'עדכון: ' + timeStr + ' [tzevaadom]';
+
+    // tzevaadom live: [] = שקט, [{cities:[...], threat:'...'}] = אזעקה
+    const alerts = Array.isArray(data) ? data : [];
+    const active = alerts.length > 0;
+
+    if (active) {
+      const cities = alerts.flatMap(a => Array.isArray(a.cities) ? a.cities : []);
+      const title  = alerts[0]?.threat || alerts[0]?.title || 'ירי רקטות';
+      const alertKey = [...cities].sort().join(',');
+
+      if (alertKey !== lastAlertKey) {
+        lastAlertKey = alertKey;
+        todayWaveCount++;
+        alertHistory.unshift({ time: timeStr, cities, title });
+        if (alertHistory.length > 80) alertHistory.pop();
+        updateLiveUI();
+        refreshCityPanelIfAffected(cities);
+      }
+      showAlert(cities, title, timeStr);
+      dotEl.style.background = '#f44336';
+      dotEl.style.boxShadow  = '0 0 16px #f44336';
+      textEl.textContent = '🚨 אזעקה LIVE! · ' + todayWaveCount + ' גלים היום';
+      textEl.style.color = '#f44336';
+    } else {
+      lastAlertKey = null;
+      handleNoAlert(dotEl, textEl, timeEl, timeStr);
+    }
+
+  } catch (err) {
+    consecutiveErrors++;
+    console.log('[GamerAlert] poll err:', err.message);
+    if (consecutiveErrors > 5) {
+      dotEl.style.background = '#555';
+      textEl.textContent     = '⚠️ בעיית חיבור — מנסה שוב';
+      textEl.style.color     = 'var(--text3)';
+    } else {
+      dotEl.style.background = '#ff8f00';
+      textEl.textContent     = '🔄 מתחבר (' + consecutiveErrors + ')...';
+      textEl.style.color     = '#ff8f00';
+    }
+    dotEl.style.boxShadow = 'none';
+    timeEl.textContent    = 'שגיאה: ' + err.message.slice(0, 40);
+  }
+}
+
+function handleNoAlert(dotEl, textEl, timeEl, timeStr) {
+  hideAlert();
+  dotEl.style.background = 'var(--green)';
+  dotEl.style.boxShadow  = '0 0 8px var(--green)';
+  textEl.textContent     = todayWaveCount > 0
+    ? '✅ שקט כרגע · ' + todayWaveCount + ' גלים היום'
+    : '✅ אין אזעקה כרגע';
+  textEl.style.color = '';
+}
+
+function handleNoAlert(dotEl, textEl, timeEl, timeStr, src){
+  hideAlert();
+  dotEl.style.background = 'var(--green)';
+  dotEl.style.boxShadow  = '0 0 8px var(--green)';
+  textEl.textContent = todayWaveCount > 0
+    ? `✅ שקט כרגע · ${todayWaveCount} גלים היום`
+    : '✅ אין אזעקה כרגע';
+  textEl.style.color = '';
+  timeEl.textContent = `עדכון: ${timeStr} [${src}]`;
+}
+
+function updateLiveUI(){
+  // Update day chart today bar
+  const todayEl = document.querySelector('.dc-col:last-child .dc-val');
+  if(todayEl) todayEl.textContent = todayWaveCount;
+
+  // Update war bar if element exists
+  const wbEls = document.querySelectorAll('.wb-n');
+  // first wb is war total — we track separately
+}
+
+function updateTodayCount(){
+  const el = document.getElementById('todayWaves');
+  if(el) el.textContent = todayWaveCount + ' גלים היום';
+}
+
+// ── Refresh city panel stats if user is viewing an affected city ──
+function refreshCityPanelIfAffected(alertCities){
+  const panel = document.getElementById('cityPanel');
+  if(!panel) return;
+  const cityNameEl = panel.querySelector('[data-city-he]');
+  if(!cityNameEl) return;
+  const cityHe = cityNameEl.dataset.cityHe;
+  // Check if current city is in alert
+  const affected = alertCities.some(c =>
+    typeof c === 'string' && (c.includes(cityHe) || cityHe.includes(c.split(' ')[0]))
+  );
+  if(affected){
+    // Flash the panel border red
+    panel.style.borderColor = 'rgba(244,67,54,0.8)';
+    panel.style.boxShadow   = '0 0 20px rgba(244,67,54,0.3)';
+    const alertBadge = document.getElementById('cityLiveAlertBadge');
+    if(alertBadge){
+      alertBadge.style.display = 'flex';
+      alertBadge.textContent   = '🚨 אזעקה פעילה עכשיו בעיר זו!';
+    }
+    setTimeout(() => {
+      panel.style.borderColor = '';
+      panel.style.boxShadow   = '';
+    }, 30000);
+  }
+}
+
+function showAlert(cities, title, timeStr){
+  const banner   = document.getElementById('alertBanner');
+  const cityList = Array.isArray(cities) ? cities.slice(0,8).join(' · ') : String(cities);
+  document.getElementById('alertText').textContent = `${title} — ${cityList}`;
+  document.getElementById('alertSub').textContent  = 'היכנס למקלט מיידית! פיקוד העורף';
+  document.getElementById('alertTime').textContent = timeStr;
+  banner.classList.add('show');
+  clearTimeout(window._alertHideTimer);
+  window._alertHideTimer = setTimeout(hideAlert, 180000);
+}
+function hideAlert(){
+  document.getElementById('alertBanner').classList.remove('show');
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+function init(){
+  const h=tickClock();
+  buildGameGrid();
+  updateSwSub();
+  buildHeatmap(h);
+  updateStatus(h);
+  buildSafeWindows(h);
+  buildDayChart();
+  buildHourBadges();
+  buildMiniHeatmap('center','mh-center',h);
+  rebuildRegionWindows(h);
+
+  // Clock tick every second, re-render on hour change
+  let lastH=h;
+  setInterval(()=>{
+    const curr=tickClock();
+    if(curr!==lastH){
+      lastH=curr;
+      buildHeatmap(curr);
+      updateStatus(curr);
+      buildSafeWindows(curr);
+      buildHourBadges();
+      rebuildRegionWindows(curr);
+      ['north','center','jerusalem','south'].forEach(r=>{
+        if(document.getElementById(`sec-${r}`)?.classList.contains('open'))
+          buildMiniHeatmap(r,`mh-${r}`,curr);
+      });
+    }
+  },1000);
+
+  // Load full 14-day history, then live poll every 5s
+  loadFullHistory();
+  setTimeout(checkAlerts, 800);
+  setInterval(checkAlerts, 5000);
+  // Reload history every 5 minutes to pick up new days
+  setInterval(loadFullHistory, 5 * 60 * 1000);
+
+  // Also refresh city panel every 30s if open
+  setInterval(()=>{
+    const panel = document.getElementById('cityPanel');
+    if(panel){
+      const cityHe = panel.querySelector('[data-city-he]')?.dataset?.cityHe;
+      const city = CITIES.find(c=>c.he===cityHe);
+      if(city) showCityPanel(city);
+    }
+  }, 30000);
+}
+
+init();
+</script>
+</body>
+</html>
